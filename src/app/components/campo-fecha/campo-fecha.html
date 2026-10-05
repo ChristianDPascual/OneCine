@@ -1,0 +1,25 @@
+<div class="fecha" role="group" [attr.aria-label]="'Fecha'">
+  <input [id]="inputId()" class="fecha__dia" type="number" inputmode="numeric" min="1" max="31" step="1"
+         placeholder="Día" aria-label="Día"
+         [value]="dia() ?? ''" [disabled]="deshabilitado()"
+         [attr.aria-invalid]="!!errorDia()"
+         (input)="cambiarDia($any($event.target).value)" (blur)="tocar()" />
+
+  <select class="fecha__mes" aria-label="Mes" [disabled]="deshabilitado()"
+          (change)="cambiarMes($any($event.target).value)" (blur)="tocar()">
+    <option value="" [selected]="mes() === null">Mes</option>
+    @for (nombre of meses; track $index) {
+      <option [value]="$index + 1" [selected]="mes() === $index + 1">{{ nombre }}</option>
+    }
+  </select>
+
+  <input class="fecha__anio" type="number" inputmode="numeric" min="1901" step="1"
+         placeholder="Año" aria-label="Año"
+         [value]="anio() ?? ''" [disabled]="deshabilitado()"
+         [attr.aria-invalid]="!!errorAnio()"
+         (input)="cambiarAnio($any($event.target).value)" (blur)="tocar()" />
+</div>
+
+@if (mensaje(); as texto) {
+  <p class="fecha__error" role="alert">{{ texto }}</p>
+}

@@ -1,0 +1,88 @@
+.perfil__saludo {
+  font-size: clamp(2rem, 7vw, 2.6rem);
+}
+
+.perfil__menu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #222228;
+}
+
+.perfil__menu li + li {
+  border-top: 1px solid var(--cinema-surface);
+}
+
+.perfil__menu a {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 1.25rem 1.4rem;
+  color: var(--cinema-white);
+  font-family: var(--font-title);
+  font-weight: 600;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  transition: background 0.2s, color 0.2s;
+}
+
+.perfil__menu a:hover,
+.perfil__menu a:focus-visible {
+  background: #2c2c33;
+  color: var(--one-red);
+}
+
+.perfil__menu svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.perfil__salir {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.95rem;
+  border: 1px solid var(--one-red);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--one-red);
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.perfil__salir:hover,
+.perfil__salir:focus-visible {
+  background: var(--one-red);
+  color: var(--cinema-white);
+}
+
+.perfil__salir:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.perfil__salir svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

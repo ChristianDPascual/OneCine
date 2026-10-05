@@ -1,0 +1,132 @@
+@let p = pelicula();
+<dialog #dialogo class="detalle" [attr.aria-labelledby]="'detalle-titulo-' + p.id"
+        (close)="cerrar.emit()" (click)="alHacerClic($event)">
+  <div class="detalle__contenido">
+    <button type="button" class="detalle__cerrar" aria-label="Cerrar" (click)="cerrarDialogo()">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+    </button>
+
+    <div class="detalle__poster">
+      @if (p.imagen_url) {
+        <img [src]="p.imagen_url" [alt]="'Póster de ' + p.titulo" />
+      } @else {
+        <span>{{ p.titulo }}</span>
+      }
+    </div>
+
+    <div class="detalle__info">
+      <div class="detalle__badges">
+        <span class="badge">{{ p.edad_minima | clasificacion }}</span>
+        @switch (lanzamiento()) {
+          @case ('proximamente') { <span class="badge badge--rojo">Próximamente</span> }
+          @case ('estreno') { <span class="badge badge--rojo">En cartelera</span> }
+          @case ('clasico') { <span class="badge badge--dorado">Clásico</span> }
+        }
+      </div>
+
+      <h2 class="detalle__titulo" [id]="'detalle-titulo-' + p.id">{{ p.titulo }}</h2>
+
+      <!-- Puntuación promedio -->
+      <div class="puntuacion" aria-live="polite">
+        @if (cargandoResenas()) {
+          <span class="texto-secundario">Cargando puntuación…</span>
+        } @else if (puntuacion(); as punt) {
+          <app-estrellas [valor]="punt.promedio" tamano="1.35rem" />
+          <strong class="puntuacion__promedio">{{ punt.promedio | number: '1.1-1' }}</strong>
+          <span class="texto-secundario">/ 5 · {{ punt.cantidad }} {{ punt.cantidad === 1 ? 'voto' : 'votos' }}</span>
+        } @else if (!errorResenas()) {
+          <span class="aviso-vacio">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" /></svg>
+            Sin puntuación
+          </span>
+        }
+      </div>
+
+      <dl class="detalle__datos">
+        @if (p.director) {
+          <div><dt>Director</dt><dd>{{ p.director }}</dd></div>
+        }
+        <div><dt>Duración</dt><dd>{{ p.duracion_min | duracion }}</dd></div>
+        <div>
+          <dt>{{ lanzamiento() === 'proximamente' ? 'Se estrena' : 'Estreno' }}</dt>
+          <dd>{{ p.fecha_estreno | date: "d 'de' MMMM 'de' y" : 'UTC' }}</dd>
+        </div>
+        <div><dt>Clasificación</dt><dd>{{ p.edad_minima | clasificacion }}</dd></div>
+      </dl>
+
+      @if (p.generos.length > 0) {
+        <ul class="detalle__generos" aria-label="Géneros">
+          @for (genero of p.generos; track genero.id) {
+            <li>{{ genero.nombre }}</li>
+          }
+        </ul>
+      }
+
+      <div class="detalle__sinopsis">
+        <h3>Sinopsis</h3>
+        <p>{{ p.sinopsis }}</p>
+      </div>
+
+      <!-- Funciones a la venta -->
+      <section class="funciones" [attr.aria-labelledby]="'funciones-titulo-' + p.id">
+        <h3 [id]="'funciones-titulo-' + p.id">Comprar entradas</h3>
+
+        @if (cargandoFunciones()) {
+          <p class="texto-secundario">Buscando funciones…</p>
+        } @else if (funcionesPorDia().length === 0) {
+          <p class="aviso-vacio">Todavía no hay funciones a la venta</p>
+        } @else {
+          @if (!auth.logueado()) {
+            <p class="funciones__sesion">Iniciá sesión para comprar tus entradas.</p>
+          }
+          @for (grupo of funcionesPorDia(); track grupo.dia) {
+            <div class="funciones__dia">
+              <span class="funciones__fecha">{{ grupo.fecha | date: "EEE d 'de' MMM" }}</span>
+              <div class="funciones__horarios">
+                @for (f of grupo.funciones; track f.id) {
+                  @if (auth.logueado()) {
+                    <a class="horario" [routerLink]="['/comprar', f.id]">
+                      <strong>{{ f.inicio | date: 'HH:mm' }}</strong>
+                      <small>Sala {{ f.sala.numero }} · {{ f.sala.formato }} · {{ f.idioma === 'subtitulada' ? 'SUB' : 'CAST' }}</small>
+                    </a>
+                  } @else {
+                    <span class="horario horario--bloqueado">
+                      <strong>{{ f.inicio | date: 'HH:mm' }}</strong>
+                      <small>Sala {{ f.sala.numero }} · {{ f.sala.formato }} · {{ f.idioma === 'subtitulada' ? 'SUB' : 'CAST' }}</small>
+                    </span>
+                  }
+                }
+              </div>
+            </div>
+          }
+        }
+      </section>
+
+      <!-- Reseñas -->
+      <section class="resenas" [attr.aria-labelledby]="'resenas-titulo-' + p.id">
+        <h3 [id]="'resenas-titulo-' + p.id">Reseñas</h3>
+
+        @if (cargandoResenas()) {
+          <p class="texto-secundario">Cargando reseñas…</p>
+        } @else if (errorResenas()) {
+          <p class="texto-secundario">No pudimos cargar las reseñas.</p>
+        } @else {
+          <ul class="resenas__lista">
+            @for (resena of resenas(); track resena.id) {
+              <li class="resena">
+                <div class="resena__cabecera">
+                  <strong>{{ resena.autor }}</strong>
+                  <app-estrellas [valor]="resena.estrellas" tamano="0.85rem" />
+                  <time class="resena__fecha" [attr.datetime]="resena.created_at">{{ resena.created_at | date: 'd MMM y' }}</time>
+                </div>
+                <p class="resena__comentario">{{ resena.comentario }}</p>
+              </li>
+            } @empty {
+              <li class="resenas__vacio">Sin reseñas</li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+  </div>
+</dialog>

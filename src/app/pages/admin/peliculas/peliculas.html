@@ -1,0 +1,151 @@
+<section class="admin-seccion">
+  <div class="peliculas__encabezado">
+    <div>
+      <span class="etiqueta-cine">Panel</span>
+      <h1 class="titulo-seccion">Películas</h1>
+    </div>
+    <a routerLink="/admin/peliculas/nueva" class="peliculas__nueva">+ Nueva película</a>
+  </div>
+
+  @if (mensajeExito(); as mensaje) {
+    <app-alerta tipo="exito" titulo="Listo" [mensaje]="mensaje" (cerrar)="mensajeExito.set(null)" />
+  }
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+
+  <!-- ---------- Buscador + filtros ---------- -->
+  <div class="filtros-admin">
+    <div class="filtros-admin__superior">
+      <div class="filtros-admin__buscador">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+        <input #buscar type="search" placeholder="Buscar por título..." aria-label="Buscar películas por título"
+               [value]="busqueda()" (input)="busqueda.set(buscar.value)" />
+      </div>
+
+      <div class="filtros-admin__resumen" aria-live="polite">
+        <span class="texto-secundario">{{ filtradas().length }} de {{ lista().length }} películas</span>
+        @if (cantidadFiltros() > 0) {
+          <button type="button" class="filtros-admin__borrar" (click)="borrarFiltros()">
+            Borrar filtros ({{ cantidadFiltros() }})
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="filtros-admin__grupo filtros-admin__grupo--completo" role="group" aria-labelledby="filtro-generos">
+      <span id="filtro-generos" class="filtros-admin__titulo">Géneros</span>
+      <div class="filtros-admin__chips">
+        @for (genero of generos(); track genero.id) {
+          <button type="button" class="filtro-chip"
+                  [class.filtro-chip--activo]="generosElegidos().includes(genero.id)"
+                  [attr.aria-pressed]="generosElegidos().includes(genero.id)"
+                  (click)="alternarGenero(genero.id)">
+            {{ genero.nombre }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="filtros-admin__fila">
+      <div class="filtros-admin__grupo" role="group" aria-labelledby="filtro-edad">
+        <span id="filtro-edad" class="filtros-admin__titulo">Clasificación</span>
+        <div class="filtros-admin__chips">
+          @for (opcion of edades; track opcion) {
+            <button type="button" class="filtro-chip"
+                    [class.filtro-chip--activo]="edad() === opcion"
+                    [attr.aria-pressed]="edad() === opcion"
+                    (click)="elegir(edad, opcion)">
+              {{ opcion | clasificacion }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filtros-admin__grupo" role="group" aria-labelledby="filtro-lanzamiento">
+        <span id="filtro-lanzamiento" class="filtros-admin__titulo">Lanzamiento</span>
+        <div class="filtros-admin__chips">
+          @for (opcion of opcionesLanzamiento; track opcion.valor) {
+            <button type="button" class="filtro-chip"
+                    [class.filtro-chip--activo]="lanzamiento() === opcion.valor"
+                    [attr.aria-pressed]="lanzamiento() === opcion.valor"
+                    (click)="elegir(lanzamiento, opcion.valor)">
+              {{ opcion.etiqueta }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filtros-admin__grupo" role="group" aria-labelledby="filtro-estado">
+        <span id="filtro-estado" class="filtros-admin__titulo">Estado</span>
+        <div class="filtros-admin__chips">
+          @for (opcion of opcionesVisibilidad; track opcion.valor) {
+            <button type="button" class="filtro-chip"
+                    [class.filtro-chip--activo]="visibilidad() === opcion.valor"
+                    [attr.aria-pressed]="visibilidad() === opcion.valor"
+                    (click)="elegir(visibilidad, opcion.valor)">
+              {{ opcion.etiqueta }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- Grilla ---------- -->
+  <div class="peliculas__grilla">
+    @for (pelicula of filtradas(); track pelicula.id) {
+      <article class="pelicula" [class.pelicula--oculta]="!pelicula.visible">
+        <div class="pelicula__poster">
+          @if (pelicula.imagen_url) {
+            <img [src]="pelicula.imagen_url" [alt]="'Póster de ' + pelicula.titulo" loading="lazy" />
+          } @else {
+            <span class="pelicula__sin-poster">Sin póster</span>
+          }
+
+          <div class="pelicula__badges">
+            <span class="badge">{{ pelicula.edad_minima | clasificacion }}</span>
+            @switch (lanzamientoDe(pelicula)) {
+              @case ('proximamente') { <span class="badge badge--rojo">Próximamente</span> }
+              @case ('clasico') { <span class="badge badge--dorado">Clásico</span> }
+            }
+            @if (!pelicula.visible) {
+              <span class="badge badge--gris">Oculta</span>
+            }
+          </div>
+        </div>
+
+        <div class="pelicula__info">
+          <h2 class="titulo-pelicula">{{ pelicula.titulo }}</h2>
+          <p class="texto-secundario">
+            Estreno {{ pelicula.fecha_estreno | date: 'd MMM y' : 'UTC' }} · {{ pelicula.duracion_min }} min
+          </p>
+          <p class="pelicula__generos">{{ nombresGeneros(pelicula) }}</p>
+          <p class="pelicula__precio">
+            @if (pelicula.precio !== null) {
+              {{ pelicula.precio | currency: 'ARS' : 'symbol-narrow' }}
+            } @else {
+              <span class="pelicula__sin-precio">Sin precio</span>
+            }
+            @if (pelicula.precio_preventa !== null) {
+              <span class="pelicula__preventa">
+                · Preventa {{ pelicula.precio_preventa | currency: 'ARS' : 'symbol-narrow' }}
+              </span>
+            }
+          </p>
+
+          <div class="pelicula__acciones">
+            <a class="pelicula__accion" [routerLink]="['/admin/peliculas', pelicula.id, 'editar']">Editar</a>
+            <button type="button" class="pelicula__accion" (click)="alternarVisible(pelicula)">
+              {{ pelicula.visible ? 'Ocultar' : 'Mostrar' }}
+            </button>
+          </div>
+        </div>
+      </article>
+    } @empty {
+      <p class="texto-secundario peliculas__vacio">
+        {{ cantidadFiltros() > 0 ? 'Ninguna película coincide con los filtros.' : 'Todavía no hay películas cargadas.' }}
+      </p>
+    }
+  </div>
+</section>

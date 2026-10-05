@@ -1,0 +1,28 @@
+@let p = pelicula();
+<button type="button" class="tarjeta" aria-haspopup="dialog" [attr.aria-label]="'Ver ficha de ' + p.titulo"
+        (click)="abierta.set(true)">
+  <span class="tarjeta__poster">
+    @if (p.imagen_url) {
+      <img [src]="p.imagen_url" alt="" loading="lazy" />
+    } @else {
+      <span class="tarjeta__sin-poster">{{ p.titulo }}</span>
+    }
+
+    <span class="tarjeta__badges">
+      <span class="badge">{{ p.edad_minima | clasificacion }}</span>
+      @switch (lanzamiento()) {
+        @case ('proximamente') { <span class="badge badge--rojo">{{ p.fecha_estreno | date: 'd MMM' : 'UTC' }}</span> }
+        @case ('clasico') { <span class="badge badge--dorado">Clásico</span> }
+      }
+    </span>
+  </span>
+
+  <span class="tarjeta__info">
+    <span class="tarjeta__titulo">{{ p.titulo }}</span>
+    <span class="tarjeta__meta">{{ p.duracion_min | duracion }}@if (generos()) { · {{ generos() }} }</span>
+  </span>
+</button>
+
+@if (abierta()) {
+  <app-detalle-pelicula [pelicula]="p" (cerrar)="abierta.set(false)" />
+}

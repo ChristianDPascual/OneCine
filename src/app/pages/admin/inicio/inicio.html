@@ -1,0 +1,16 @@
+@let empleado = empleados.actual();
+
+<section class="admin-inicio">
+  <span class="etiqueta-cine admin-inicio__etiqueta">Panel de empleados</span>
+<h1 class="titulo-seccion">Hola{{ empleado ? ', ' + empleado.nombre + ' ' + empleado.apellido : '' }}</h1>
+  <p class="texto-secundario">Elegí una sección para empezar.</p>
+
+  <div class="admin-inicio__grilla">
+    @for (seccion of empleados.secciones(); track seccion.ruta) {
+      <a class="admin-inicio__tarjeta" [routerLink]="['/admin', seccion.ruta]">
+        <span class="titulo-pelicula">{{ seccion.titulo }}</span>
+        <span class="texto-secundario">{{ seccion.descripcion }}</span>
+      </a>
+    }
+  </div>
+</section>

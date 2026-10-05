@@ -1,0 +1,158 @@
+<section class="producto-form">
+  <header class="producto-form__encabezado">
+    <span class="etiqueta-cine">Productos</span>
+    <h1 class="titulo-seccion">{{ esEdicion() ? 'Editar producto' : 'Nuevo producto' }}</h1>
+  </header>
+
+  @if (noEncontrado()) {
+    <div class="producto-form__aviso" role="alert">
+      <p class="titulo-pelicula">Producto no encontrado</p>
+      <p class="texto-secundario">El producto que querés editar no existe. Volvé al listado con el botón de arriba.</p>
+    </div>
+  } @else if (cargado() && categorias().length === 0 && !mensajeError()) {
+    <div class="producto-form__aviso">
+      <p class="titulo-pelicula">No hay categorías</p>
+      <p class="texto-secundario">Antes de cargar productos tenés que crear al menos una categoría.</p>
+      <a routerLink="/admin/productos/categorias" class="boton boton--primario producto-form__boton-aviso">Crear categorías</a>
+    </div>
+  } @else {
+    <form class="producto-form__form" [formGroup]="formulario" (ngSubmit)="guardar()">
+
+      <!-- ---------- Datos ---------- -->
+      <fieldset class="producto-form__grupo">
+        <legend>Datos del producto</legend>
+
+        <div class="campo producto-form__completo">
+          <label for="prod-nombre">Nombre</label>
+          <input id="prod-nombre" type="text" formControlName="nombre" maxlength="80" placeholder="Ej.: Pochoclos grandes"
+                 [attr.aria-invalid]="campos.nombre.touched && campos.nombre.invalid" />
+          @if (campos.nombre.touched && campos.nombre.invalid) {
+            <p class="campo__error">Ingresá el nombre del producto.</p>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="prod-categoria">Categoría</label>
+          <select id="prod-categoria" formControlName="categoria_id"
+                  [attr.aria-invalid]="campos.categoria_id.touched && campos.categoria_id.invalid">
+            <option [ngValue]="null" disabled>Elegí una categoría</option>
+            @for (categoria of categorias(); track categoria.id) {
+              <option [ngValue]="categoria.id">{{ categoria.nombre }}</option>
+            }
+          </select>
+          @if (campos.categoria_id.touched && campos.categoria_id.invalid) {
+            <p class="campo__error">Elegí la categoría.</p>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="prod-precio">Precio ($)</label>
+          <input id="prod-precio" type="number" inputmode="decimal" min="0" step="0.01" formControlName="precio"
+                 [attr.aria-invalid]="campos.precio.touched && campos.precio.invalid" />
+          @if (campos.precio.touched && campos.precio.invalid) {
+            <p class="campo__error">
+              @if (campos.precio.hasError('required')) { Ingresá el precio. }
+              @else { El precio no puede ser negativo. }
+            </p>
+          }
+        </div>
+
+        <div class="campo producto-form__completo">
+          <label for="prod-descripcion">Descripción <span class="producto-form__opcional">(opcional)</span></label>
+          <textarea id="prod-descripcion" rows="3" formControlName="descripcion" [maxlength]="largoMaximoDescripcion"
+                    placeholder="Ej.: Balde de 170 g, salados o dulces"></textarea>
+          <span class="producto-form__contador">{{ largoDescripcion() }}/{{ largoMaximoDescripcion }}</span>
+        </div>
+      </fieldset>
+
+      <!-- ---------- Imagen ---------- -->
+      <fieldset class="producto-form__grupo producto-form__imagen">
+        <legend>Imagen</legend>
+
+        <div class="campo">
+          <label class="subida" [class.subida--arrastrando]="arrastrando()"
+                 (dragover)="alArrastrar($event)" (dragleave)="arrastrando.set(false)" (drop)="alSoltar($event)">
+            <input type="file" [accept]="tiposImagen" (change)="alElegirArchivo($event)" />
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 16V4M7 9l5-5 5 5" />
+              <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+            </svg>
+            <span class="subida__titulo">{{ vistaPrevia() ? 'Cambiar imagen' : 'Elegir imagen' }}</span>
+            <span class="texto-secundario">o arrastrala hasta acá</span>
+            <span class="subida__ayuda">JPG, PNG o WEBP · hasta {{ pesoMaximoMb }} MB · cuadrada (1:1)</span>
+          </label>
+
+          @if (errorImagen(); as error) {
+            <p class="campo__error">{{ error }}</p>
+          }
+          @if (archivoImagen(); as archivo) {
+            <p class="texto-secundario">Seleccionada: {{ archivo.name }} (se sube al guardar)</p>
+          }
+          @if (vistaPrevia()) {
+            <button type="button" class="producto-form__quitar" (click)="quitarImagen()">Quitar imagen</button>
+          }
+        </div>
+
+        <div class="producto-form__vista-previa">
+          @if (vistaPrevia(); as url) {
+            <img [src]="url" alt="Vista previa del producto" />
+          } @else {
+            <span>Sin imagen</span>
+          }
+        </div>
+      </fieldset>
+
+      <!-- ---------- Venta y puntos ---------- -->
+      <fieldset class="producto-form__grupo">
+        <legend>Venta y puntos</legend>
+
+        <label class="interruptor producto-form__completo">
+          <input type="checkbox" formControlName="activo" />
+          <span class="interruptor__control" aria-hidden="true"></span>
+          <span>
+            Disponible para la venta
+            <small class="texto-secundario">Si está apagado, no se ofrece en el candy bar.</small>
+          </span>
+        </label>
+
+        <label class="interruptor producto-form__completo">
+          <input type="checkbox" formControlName="canjeable" />
+          <span class="interruptor__control" aria-hidden="true"></span>
+          <span>
+            Se puede canjear con puntos
+            <small class="texto-secundario">Los clientes registrados lo pueden obtener gratis con sus puntos.</small>
+          </span>
+        </label>
+
+        @if (canjeable()) {
+          <div class="campo">
+            <label for="prod-puntos">Puntos necesarios para canjearlo</label>
+            <input id="prod-puntos" type="number" inputmode="numeric" min="1" step="1" formControlName="puntos_canje"
+                   placeholder="Ej.: 150"
+                   [attr.aria-invalid]="campos.puntos_canje.touched && campos.puntos_canje.invalid" />
+            @if (campos.puntos_canje.touched && campos.puntos_canje.invalid) {
+              <p class="campo__error">
+                @if (campos.puntos_canje.hasError('required')) { Ingresá la cantidad de puntos. }
+                @else { Un número entero mayor a 0. }
+              </p>
+            }
+          </div>
+        }
+      </fieldset>
+
+      @if (camposInvalidos().length > 0) {
+        <app-alerta titulo="Revisá los datos"
+                    [mensaje]="'Hay campos con errores: ' + camposInvalidos().join(', ') + '.'"
+                    (cerrar)="camposInvalidos.set([])" />
+      }
+
+      @if (mensajeError(); as mensaje) {
+        <app-alerta titulo="No pudimos guardar" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+      }
+
+      <button type="submit" class="boton boton--primario" [disabled]="enviando()">
+        {{ enviando() ? 'Guardando…' : (esEdicion() ? 'Guardar cambios' : 'Crear producto') }}
+      </button>
+    </form>
+  }
+</section>

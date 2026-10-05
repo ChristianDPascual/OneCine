@@ -1,0 +1,140 @@
+<section class="admin-seccion">
+  <div class="productos__encabezado">
+    <div>
+      <span class="etiqueta-cine">Panel</span>
+      <h1 class="titulo-seccion">Productos</h1>
+    </div>
+    <div class="productos__botones">
+      <a routerLink="/admin/productos/categorias" class="productos__secundario">Categorías</a>
+      <a routerLink="/admin/productos/nuevo" class="productos__nuevo">+ Nuevo producto</a>
+    </div>
+  </div>
+
+  @if (mensajeExito(); as mensaje) {
+    <app-alerta tipo="exito" titulo="Listo" [mensaje]="mensaje" (cerrar)="mensajeExito.set(null)" />
+  }
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+
+  @if (cargado() && categorias().length === 0 && !mensajeError()) {
+    <div class="productos__aviso">
+      <p class="titulo-pelicula">Primero creá las categorías</p>
+      <p class="texto-secundario">Cada producto pertenece a una categoría (por ejemplo, Pochoclos o Bebidas).</p>
+      <a routerLink="/admin/productos/categorias" class="productos__nuevo">Crear categorías</a>
+    </div>
+  } @else {
+    <!-- ---------- Buscador + filtros ---------- -->
+    <div class="filtros-admin">
+      <div class="filtros-admin__superior">
+        <div class="filtros-admin__buscador">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          <input #buscar type="search" placeholder="Buscar por nombre..." aria-label="Buscar productos por nombre"
+                 [value]="busqueda()" (input)="busqueda.set(buscar.value)" />
+        </div>
+
+        <div class="filtros-admin__resumen" aria-live="polite">
+          <span class="texto-secundario">{{ cantidadFiltrados() }} de {{ productos().length }} productos</span>
+          @if (cantidadFiltros() > 0) {
+            <button type="button" class="filtros-admin__borrar" (click)="borrarFiltros()">
+              Borrar filtros ({{ cantidadFiltros() }})
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filtros-admin__grupo" role="group" aria-labelledby="filtro-categoria">
+        <span id="filtro-categoria" class="filtros-admin__titulo">Categoría</span>
+        <div class="filtros-admin__chips">
+          @for (categoria of categorias(); track categoria.id) {
+            <button type="button" class="filtro-chip"
+                    [class.filtro-chip--activo]="categoriaElegida() === categoria.id"
+                    [attr.aria-pressed]="categoriaElegida() === categoria.id"
+                    (click)="elegirCategoria(categoria.id)">
+              {{ categoria.nombre }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filtros-admin__fila">
+        <div class="filtros-admin__grupo" role="group" aria-labelledby="filtro-estado">
+          <span id="filtro-estado" class="filtros-admin__titulo">Estado</span>
+          <div class="filtros-admin__chips">
+            @for (opcion of opcionesEstado; track opcion.valor) {
+              <button type="button" class="filtro-chip"
+                      [class.filtro-chip--activo]="estado() === opcion.valor"
+                      [attr.aria-pressed]="estado() === opcion.valor"
+                      (click)="elegirEstado(opcion.valor)">
+                {{ opcion.etiqueta }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="filtros-admin__grupo" role="group" aria-labelledby="filtro-puntos">
+          <span id="filtro-puntos" class="filtros-admin__titulo">Puntos</span>
+          <div class="filtros-admin__chips">
+            <button type="button" class="filtro-chip"
+                    [class.filtro-chip--activo]="soloCanjeables()"
+                    [attr.aria-pressed]="soloCanjeables()"
+                    (click)="soloCanjeables.set(!soloCanjeables())">
+              Canjeables con puntos
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- Productos agrupados por categoría ---------- -->
+    @for (grupo of grupos(); track grupo.categoria.id) {
+      <section class="productos__grupo" [attr.aria-labelledby]="'cat-' + grupo.categoria.id">
+        <h2 [id]="'cat-' + grupo.categoria.id" class="productos__categoria">
+          {{ grupo.categoria.nombre }}
+          <span class="texto-secundario">({{ grupo.productos.length }})</span>
+        </h2>
+
+        <div class="productos__grilla">
+          @for (producto of grupo.productos; track producto.id) {
+            <article class="producto" [class.producto--inactivo]="!producto.activo">
+              <div class="producto__imagen">
+                @if (producto.imagen_url) {
+                  <img [src]="producto.imagen_url" [alt]="producto.nombre" loading="lazy" />
+                } @else {
+                  <span>Sin imagen</span>
+                }
+                <div class="producto__badges">
+                  @if (producto.puntos_canje !== null) {
+                    <span class="badge badge--dorado">{{ producto.puntos_canje }} pts</span>
+                  }
+                  @if (!producto.activo) {
+                    <span class="badge badge--gris">Inactivo</span>
+                  }
+                </div>
+              </div>
+
+              <div class="producto__info">
+                <h3 class="titulo-pelicula">{{ producto.nombre }}</h3>
+                @if (producto.descripcion) {
+                  <p class="producto__descripcion">{{ producto.descripcion }}</p>
+                }
+                <p class="producto__precio">{{ producto.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</p>
+
+                <div class="producto__acciones">
+                  <a class="producto__accion" [routerLink]="['/admin/productos', producto.id, 'editar']">Editar</a>
+                  <button type="button" class="producto__accion" (click)="alternarActivo(producto)">
+                    {{ producto.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    } @empty {
+      <p class="texto-secundario">
+        {{ cantidadFiltros() > 0 ? 'Ningún producto coincide con los filtros.' : 'Todavía no hay productos cargados.' }}
+      </p>
+    }
+  }
+</section>

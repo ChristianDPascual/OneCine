@@ -1,0 +1,81 @@
+<header class="navbar">
+  <a routerLink="/" class="navbar__logo" (click)="cerrarMenu()">
+    <img src="assets/icons/logo-onecine.png" alt="OneCine" />
+  </a>
+
+  <div id="menu-principal" class="navbar__menu" [class.navbar__menu--abierto]="menuAbierto()">
+    <nav aria-label="Navegación principal">
+      <ul class="navbar__links">
+        <li><a routerLink="/" (click)="cerrarMenu()">Inicio</a></li>
+        <li><a routerLink="/cartelera" (click)="cerrarMenu()">Cartelera</a></li>
+        <li><a routerLink="/proximamente" (click)="cerrarMenu()">Próximamente</a></li>
+        <li><a routerLink="/candy" (click)="cerrarMenu()">Candy bar</a></li>
+      </ul>
+    </nav>
+
+    <div class="navbar__busqueda">
+      <form class="navbar__buscador" role="search" [formGroup]="busqueda" (ngSubmit)="buscarTexto()">
+        <svg class="navbar__icono" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
+        <input type="search" placeholder="Buscar películas..." aria-label="Buscar películas" formControlName="texto" />
+      </form>
+
+      <button type="button" class="navbar__filtros" aria-label="Filtrar películas" aria-haspopup="dialog"
+        (click)="abrirFiltros()">
+        <svg class="navbar__icono" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 6h11M18 6h3M3 12h3M10 12h11M3 18h13M20 18h1" />
+          <circle cx="16" cy="6" r="2" />
+          <circle cx="8" cy="12" r="2" />
+          <circle cx="18" cy="18" r="2" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="navbar__acciones">
+    <button type="button" class="navbar__boton-icono" aria-label="Notificaciones">
+      <svg class="navbar__icono" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </svg>
+    </button>
+
+    <button type="button" class="navbar__usuario" [class.navbar__usuario--activo]="auth.logueado()"
+      [attr.aria-label]="auth.logueado() ? 'Mi perfil' : 'Iniciar sesión'" aria-haspopup="dialog"
+      (click)="abrirUsuario()">
+      <svg class="navbar__icono" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </svg>
+    </button>
+
+    <button type="button" class="navbar__boton-icono navbar__hamburguesa" aria-controls="menu-principal"
+      [attr.aria-expanded]="menuAbierto()" [attr.aria-label]="menuAbierto() ? 'Cerrar menú' : 'Abrir menú'"
+      (click)="alternarMenu()">
+      <svg class="navbar__icono" viewBox="0 0 24 24" aria-hidden="true">
+        @if (menuAbierto()) {
+        <path d="M18 6 6 18M6 6l12 12" />
+        } @else {
+        <path d="M4 6h16M4 12h16M4 18h16" />
+        }
+      </svg>
+    </button>
+  </div>
+</header>
+
+@if (loginAbierto()) {
+  <app-login-panel (cerrar)="loginAbierto.set(false)" />
+}
+
+@if (perfilAbierto()) {
+  <app-perfil-panel (cerrar)="perfilAbierto.set(false)" />
+}
+
+@if (filtrosAbierto()) {
+  <app-filtros-panel
+    (cerrar)="filtrosAbierto.set(false)"
+    (buscar)="buscarConFiltros($event)"
+  />
+}

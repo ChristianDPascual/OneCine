@@ -1,0 +1,240 @@
+<section class="pelicula-form">
+  <header class="pelicula-form__encabezado">
+    <span class="etiqueta-cine">Películas</span>
+    <h1 class="titulo-seccion">{{ esEdicion() ? 'Editar película' : 'Nueva película' }}</h1>
+  </header>
+
+  @if (noEncontrada()) {
+    <div class="pelicula-form__no-encontrada" role="alert">
+      <p class="titulo-pelicula">Película no encontrada</p>
+      <p class="texto-secundario">La película que querés editar no existe. Volvé al listado con el botón de arriba.</p>
+    </div>
+  } @else {
+    <form class="pelicula-form__form" [formGroup]="formulario" (ngSubmit)="guardar()">
+
+      <!-- ---------- Datos principales ---------- -->
+      <fieldset class="pelicula-form__grupo">
+        <legend>Datos de la película</legend>
+
+        <div class="campo pelicula-form__completo">
+          <label for="pel-titulo">Título</label>
+          <input id="pel-titulo" type="text" formControlName="titulo" maxlength="150"
+                 [attr.aria-invalid]="campos.titulo.touched && campos.titulo.invalid" />
+          @if (campos.titulo.touched && campos.titulo.invalid) {
+            <p class="campo__error">Ingresá el título.</p>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="pel-director">Director <span class="pelicula-form__opcional">(opcional)</span></label>
+          <input id="pel-director" type="text" formControlName="director" maxlength="100" />
+        </div>
+
+        <div class="campo">
+          <label for="pel-duracion">Duración (minutos)</label>
+          <input id="pel-duracion" type="number" inputmode="numeric" min="1" max="600" step="1"
+                 formControlName="duracion_min"
+                 [attr.aria-invalid]="campos.duracion_min.touched && campos.duracion_min.invalid" />
+          @if (campos.duracion_min.touched && campos.duracion_min.invalid) {
+            <p class="campo__error">
+              @if (campos.duracion_min.hasError('required')) { Ingresá la duración. }
+              @else { Un número entero entre 1 y 600. }
+            </p>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="pel-estreno">Fecha de estreno</label>
+          <app-campo-fecha inputId="pel-estreno" formControlName="fecha_estreno" />
+          @if (campos.fecha_estreno.touched && campos.fecha_estreno.hasError('required')) {
+            <p class="campo__error">Ingresá la fecha de estreno.</p>
+          } @else if (campos.fecha_estreno.touched && campos.fecha_estreno.hasError('fechaIncompleta')) {
+            <p class="campo__error">Completá día, mes y año.</p>
+          }
+        </div>
+
+        <div class="campo" role="radiogroup" aria-labelledby="pel-edad-titulo">
+          <span id="pel-edad-titulo" class="pelicula-form__etiqueta">Clasificación</span>
+          <div class="pelicula-form__chips">
+            @for (edad of edades; track edad) {
+              <label class="chip">
+                <input type="radio" formControlName="edad_minima" [value]="edad" />
+                <span>{{ edad | clasificacion }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <div class="campo pelicula-form__completo">
+          <label for="pel-sinopsis">Sinopsis</label>
+          <textarea id="pel-sinopsis" rows="5" formControlName="sinopsis" [maxlength]="largoMaximoSinopsis"
+                    [attr.aria-invalid]="campos.sinopsis.touched && campos.sinopsis.invalid"></textarea>
+          <div class="pelicula-form__pie-campo">
+            @if (campos.sinopsis.touched && campos.sinopsis.invalid) {
+              <p class="campo__error">Ingresá la sinopsis.</p>
+            }
+            <span class="pelicula-form__contador">{{ largoSinopsis() }}/{{ largoMaximoSinopsis }}</span>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ---------- Géneros ---------- -->
+      <fieldset id="pel-generos" tabindex="-1" class="pelicula-form__grupo pelicula-form__grupo--simple">
+        <legend>Géneros</legend>
+        <p class="texto-secundario">Elegí uno o varios.</p>
+
+        <div class="pelicula-form__chips">
+          @for (genero of generos(); track genero.id) {
+            <label class="chip">
+              <input type="checkbox" [checked]="generoSeleccionado(genero.id)" (change)="alternarGenero(genero.id)" />
+              <span>{{ genero.nombre }}</span>
+            </label>
+          }
+        </div>
+
+        @if (campos.generos.touched && campos.generos.invalid) {
+          <p class="campo__error">Elegí al menos un género.</p>
+        }
+      </fieldset>
+
+      <!-- ---------- Póster ---------- -->
+      <fieldset class="pelicula-form__grupo pelicula-form__poster">
+        <legend>Póster</legend>
+
+        <div class="campo">
+          <label
+            class="subida"
+            [class.subida--arrastrando]="arrastrando()"
+            (dragover)="alArrastrar($event)"
+            (dragleave)="arrastrando.set(false)"
+            (drop)="alSoltar($event)"
+          >
+            <input type="file" [accept]="tiposImagen" (change)="alElegirArchivo($event)" />
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 16V4M7 9l5-5 5 5" />
+              <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+            </svg>
+            <span class="subida__titulo">{{ vistaPrevia() ? 'Cambiar imagen' : 'Elegir imagen' }}</span>
+            <span class="texto-secundario">o arrastrala hasta acá</span>
+            <span class="subida__ayuda">JPG, PNG o WEBP · hasta {{ pesoMaximoMb }} MB · vertical (2:3)</span>
+          </label>
+
+          @if (errorImagen(); as error) {
+            <p class="campo__error">{{ error }}</p>
+          }
+
+          @if (archivoPoster(); as archivo) {
+            <p class="texto-secundario">Seleccionada: {{ archivo.name }} (se sube al guardar)</p>
+          }
+
+          @if (vistaPrevia()) {
+            <button type="button" class="pelicula-form__quitar" (click)="quitarImagen()">Quitar imagen</button>
+          }
+        </div>
+
+        <div class="pelicula-form__vista-previa">
+          @if (vistaPrevia(); as url) {
+            <img [src]="url" alt="Vista previa del póster" />
+          } @else {
+            <span>Sin póster</span>
+          }
+        </div>
+      </fieldset>
+
+      <!-- ---------- Publicación y lanzamiento ---------- -->
+      <fieldset class="pelicula-form__grupo">
+        <legend>Publicación y lanzamiento</legend>
+
+        <label class="interruptor pelicula-form__completo">
+          <input type="checkbox" formControlName="visible" />
+          <span class="interruptor__control" aria-hidden="true"></span>
+          <span>
+            Visible en el sitio
+            <small class="texto-secundario">Si está apagado, no aparece en la cartelera ni en las búsquedas.</small>
+          </span>
+        </label>
+
+        <div class="campo pelicula-form__completo" role="radiogroup" aria-labelledby="pel-tipo-titulo">
+          <span id="pel-tipo-titulo" class="pelicula-form__etiqueta">Tipo de lanzamiento</span>
+          <div class="pelicula-form__tipos">
+            @for (opcion of opcionesLanzamiento; track opcion.valor) {
+              <label class="tipo-lanzamiento">
+                <input type="radio" formControlName="tipo" [value]="opcion.valor" />
+                <span class="tipo-lanzamiento__caja">
+                  <span class="tipo-lanzamiento__titulo">{{ opcion.etiqueta }}</span>
+                  <span class="tipo-lanzamiento__ayuda">{{ opcion.ayuda }}</span>
+                </span>
+              </label>
+            }
+          </div>
+          <p class="texto-secundario">"Próximamente" no se elige: se muestra solo cuando la fecha de estreno es futura.</p>
+        </div>
+
+        <div class="campo">
+          <label for="pel-precio">Precio de la entrada ($)</label>
+          <input id="pel-precio" type="number" inputmode="decimal" min="1" step="0.01" formControlName="precio"
+                 [attr.aria-invalid]="campos.precio.touched && campos.precio.invalid" />
+          @if (campos.precio.touched && campos.precio.invalid) {
+            <p class="campo__error">
+              @if (campos.precio.hasError('required')) { Ingresá el precio de la entrada. }
+              @else { El precio tiene que ser mayor a 0. }
+            </p>
+          } @else {
+            <p class="texto-secundario">
+              @if (precioSugerido(tipo()); as sugerido) {
+                Sugerido para {{ tipo() === 'clasico' ? 'clásicos' : 'estrenos' }}: {{ sugerido | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}
+              } @else {
+                Configurá el precio sugerido en "Precios y promos".
+              }
+              @if (tipo() === 'preventa') { · Es el precio que rige después del estreno. }
+            </p>
+          }
+        </div>
+
+        @if (tipo() === 'preventa') {
+          <div class="campo">
+            <label for="pel-dias-preventa">Días de preventa antes del estreno</label>
+            <input id="pel-dias-preventa" type="number" inputmode="numeric" min="1" max="60" step="1"
+                   formControlName="dias_preventa"
+                   [attr.aria-invalid]="campos.dias_preventa.touched && campos.dias_preventa.invalid" />
+            @if (campos.dias_preventa.touched && campos.dias_preventa.invalid) {
+              <p class="campo__error">
+                @if (campos.dias_preventa.hasError('required')) { Ingresá los días de preventa. }
+                @else { Un número entero entre 1 y 60. }
+              </p>
+            }
+          </div>
+
+          <div class="campo">
+            <label for="pel-precio-preventa">Precio de preventa ($)</label>
+            <input id="pel-precio-preventa" type="number" inputmode="decimal" min="1" step="0.01"
+                   formControlName="precio_preventa"
+                   [attr.aria-invalid]="campos.precio_preventa.touched && campos.precio_preventa.invalid" />
+            @if (campos.precio_preventa.touched && campos.precio_preventa.invalid) {
+              <p class="campo__error">
+                @if (campos.precio_preventa.hasError('required')) { Ingresá el precio de preventa. }
+                @else { El precio tiene que ser mayor a 0. }
+              </p>
+            }
+          </div>
+        }
+      </fieldset>
+
+      @if (camposInvalidos().length > 0) {
+        <app-alerta
+          titulo="Revisá los datos"
+          [mensaje]="'Hay campos con errores: ' + camposInvalidos().join(', ') + '.'"
+          (cerrar)="camposInvalidos.set([])"
+        />
+      }
+
+      @if (mensajeError(); as mensaje) {
+        <app-alerta titulo="No pudimos guardar" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+      }
+
+      <button type="submit" class="boton boton--primario" [disabled]="enviando()">
+        {{ enviando() ? 'Guardando…' : (esEdicion() ? 'Guardar cambios' : 'Crear película') }}
+      </button>
+    </form>
+  }
+</section>

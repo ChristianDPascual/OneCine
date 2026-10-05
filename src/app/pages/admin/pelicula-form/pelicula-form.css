@@ -1,0 +1,352 @@
+.pelicula-form {
+  width: min(860px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.pelicula-form__encabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.pelicula-form__encabezado .etiqueta-cine {
+  color: var(--one-red);
+}
+
+.pelicula-form__form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.pelicula-form__grupo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.1rem;
+  margin: 0;
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+}
+
+.pelicula-form__grupo--simple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.pelicula-form__grupo legend {
+  padding: 0 0.5rem;
+  font-family: var(--font-title);
+  font-weight: 600;
+}
+
+.pelicula-form__completo {
+  grid-column: 1 / -1;
+}
+
+.pelicula-form__etiqueta {
+  font-size: 0.875rem;
+  color: var(--cinema-muted);
+}
+
+.pelicula-form__opcional {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.pelicula-form__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.pelicula-form__no-encontrada {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2rem 1.5rem;
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+  text-align: center;
+}
+
+/* ---------- Sinopsis ---------- */
+
+.campo textarea {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #222228;
+  color: var(--cinema-white);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.campo textarea:focus,
+.campo textarea[aria-invalid='true'] {
+  border-color: var(--one-red);
+}
+
+.pelicula-form__pie-campo {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pelicula-form__contador {
+  margin-left: auto;
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+}
+
+/* ---------- Póster ---------- */
+
+.pelicula-form__poster {
+  grid-template-columns: 1fr 160px;
+  align-items: start;
+}
+
+.pelicula-form__vista-previa {
+  aspect-ratio: 2 / 3;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px dashed #3a3a42;
+  border-radius: 10px;
+  background: #1c1c21;
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.pelicula-form__vista-previa img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pelicula-form__vista-previa:has(img) {
+  padding: 0;
+  border-style: solid;
+}
+
+.subida {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 180px;
+  padding: 1.5rem 1rem;
+  border: 2px dashed #3a3a42;
+  border-radius: 12px;
+  background: #1c1c21;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.subida:hover,
+.subida:focus-within,
+.subida--arrastrando {
+  border-color: var(--one-red);
+  background: #221a1c;
+}
+
+.subida input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.subida svg {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: var(--one-red);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.subida__titulo {
+  font-family: var(--font-title);
+  font-weight: 600;
+}
+
+.subida__ayuda {
+  margin-top: 0.3rem;
+  color: var(--cinema-muted);
+  font-size: 0.75rem;
+}
+
+.pelicula-form__quitar {
+  align-self: flex-start;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #3a3a42;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cinema-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.pelicula-form__quitar:hover,
+.pelicula-form__quitar:focus-visible {
+  border-color: var(--one-red);
+  color: var(--one-red);
+}
+
+/* ---------- Tipo de lanzamiento ---------- */
+
+.pelicula-form__tipos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.tipo-lanzamiento {
+  position: relative;
+  cursor: pointer;
+}
+
+.tipo-lanzamiento input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tipo-lanzamiento__caja {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #2a2a30;
+  border-radius: 12px;
+  background: #222228;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.tipo-lanzamiento:hover .tipo-lanzamiento__caja {
+  border-color: var(--cinema-muted);
+}
+
+.tipo-lanzamiento input:checked + .tipo-lanzamiento__caja {
+  border-color: var(--one-red);
+  background: #2a1a1c;
+}
+
+.tipo-lanzamiento input:focus-visible + .tipo-lanzamiento__caja {
+  outline: 2px solid var(--cinema-white);
+  outline-offset: 2px;
+}
+
+.tipo-lanzamiento__titulo {
+  font-family: var(--font-title);
+  font-weight: 600;
+}
+
+.tipo-lanzamiento input:checked + .tipo-lanzamiento__caja .tipo-lanzamiento__titulo {
+  color: var(--one-red);
+}
+
+.tipo-lanzamiento__ayuda {
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+#pel-generos:focus {
+  outline: 2px solid var(--one-red);
+  outline-offset: 4px;
+}
+
+/* ---------- Interruptores ---------- */
+
+.interruptor {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  cursor: pointer;
+}
+
+.interruptor input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.interruptor__control {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 24px;
+  margin-top: 0.1rem;
+  border-radius: 999px;
+  background: #3a3a42;
+  transition: background 0.2s;
+}
+
+.interruptor__control::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--cinema-white);
+  transition: transform 0.2s;
+}
+
+.interruptor input:checked + .interruptor__control {
+  background: var(--one-red);
+}
+
+.interruptor input:checked + .interruptor__control::after {
+  transform: translateX(20px);
+}
+
+.interruptor input:focus-visible + .interruptor__control {
+  outline: 2px solid var(--cinema-white);
+  outline-offset: 2px;
+}
+
+.interruptor small {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+}
+
+/* ---------- Celular ---------- */
+
+@media (max-width: 600px) {
+  .pelicula-form__grupo {
+    grid-template-columns: 1fr;
+  }
+
+  .pelicula-form__poster,
+  .pelicula-form__tipos {
+    grid-template-columns: 1fr;
+  }
+
+  .pelicula-form__vista-previa {
+    width: 140px;
+  }
+}

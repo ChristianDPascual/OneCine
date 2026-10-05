@@ -1,0 +1,116 @@
+<section class="admin-seccion">
+  <div class="funciones__encabezado">
+    <div>
+      <span class="etiqueta-cine">Panel</span>
+      <h1 class="titulo-seccion">Funciones</h1>
+    </div>
+    <a routerLink="/admin/funciones/nueva" [queryParams]="{ fecha: dia() }" class="funciones__nueva">+ Nueva función</a>
+  </div>
+
+  @if (mensajeExito(); as mensaje) {
+    <app-alerta tipo="exito" titulo="Listo" [mensaje]="mensaje" (cerrar)="mensajeExito.set(null)" />
+  }
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+
+  <!-- ---------- Selector de día ---------- -->
+  <div class="dia">
+    <button type="button" class="dia__flecha" (click)="moverDia(-1)" aria-label="Día anterior">‹</button>
+    <div class="dia__centro">
+      <strong class="dia__titulo">{{ fechaComoDate() | date: "EEEE d 'de' MMMM" }}</strong>
+      <div class="dia__controles">
+        <app-campo-fecha class="dia__fecha" [formControl]="fechaElegida" />
+        @if (!esHoy()) {
+          <button type="button" class="dia__hoy" (click)="irAHoy()">Hoy</button>
+        }
+      </div>
+    </div>
+    <button type="button" class="dia__flecha" (click)="moverDia(1)" aria-label="Día siguiente">›</button>
+  </div>
+
+  <!-- ---------- Grilla por sala ---------- -->
+  <div class="grilla" role="region" aria-label="Ocupación de las salas">
+    <div class="grilla__contenido">
+      <div class="grilla__fila grilla__fila--horas">
+        <span class="grilla__sala"></span>
+        <div class="grilla__pista">
+          @for (hora of horas; track $index) {
+            <span class="grilla__hora" [style.left.%]="($index / horas.length) * 100">{{ hora }}</span>
+          }
+        </div>
+      </div>
+
+      @for (fila of filas(); track fila.sala.id) {
+        <div class="grilla__fila">
+          <span class="grilla__sala">
+            Sala {{ fila.sala.numero }}
+            <small>{{ fila.sala.formato }}</small>
+          </span>
+
+          <div class="grilla__pista">
+            @for (hora of horas; track $index) {
+              <span class="grilla__linea" [style.left.%]="($index / horas.length) * 100"></span>
+            }
+
+            @for (bloque of fila.bloques; track bloque.funcion.id) {
+              @let f = bloque.funcion;
+              <a class="bloque"
+                 [class.bloque--inactiva]="f.estado !== 'programada'"
+                 [style.left.%]="bloque.izquierda"
+                 [style.width.%]="bloque.ancho + bloque.anchoLimpieza"
+                 [routerLink]="esEditable(f) ? ['/admin/funciones', f.id, 'editar'] : null"
+                 [title]="f.pelicula.titulo + ' · ' + (f.inicio | date: 'HH:mm') + ' a ' + (f.fin | date: 'HH:mm') + ' + limpieza hasta ' + (f.fin_limpieza | date: 'HH:mm')">
+                <span class="bloque__pelicula" [style.flex-basis.%]="(bloque.ancho / (bloque.ancho + bloque.anchoLimpieza)) * 100">
+                  <strong>{{ f.pelicula.titulo }}</strong>
+                  <small>{{ f.inicio | date: 'HH:mm' }} – {{ f.fin | date: 'HH:mm' }}</small>
+                </span>
+                <span class="bloque__limpieza" aria-hidden="true"></span>
+              </a>
+            }
+
+            @if (posicionAhora(); as posicion) {
+              <span class="grilla__ahora" [style.left.%]="posicion" aria-hidden="true"></span>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="texto-secundario funciones__vacio">No hay salas cargadas. Creá una sala primero.</p>
+      }
+    </div>
+  </div>
+  <p class="funciones__leyenda texto-secundario">
+    <span class="muestra muestra--pelicula"></span> Película
+    <span class="muestra muestra--limpieza"></span> Limpieza (la sala no se puede usar)
+  </p>
+
+  <!-- ---------- Lista del día ---------- -->
+  <h2 class="funciones__subtitulo">Funciones del día ({{ delDia().length }})</h2>
+
+  <ul class="lista">
+    @for (f of delDia(); track f.id) {
+      <li class="item" [class.item--inactiva]="f.estado !== 'programada'">
+        <span class="item__hora">{{ f.inicio | date: 'HH:mm' }}</span>
+        <div class="item__info">
+          <strong>{{ f.pelicula.titulo }}</strong>
+          <span class="texto-secundario">
+            Sala {{ f.sala.numero }} ({{ f.sala.formato }}) · {{ etiquetaIdioma(f.idioma) }} ·
+            termina {{ f.fin | date: 'HH:mm' }} · {{ f.precio_base | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+          </span>
+        </div>
+        <span class="item__estado" [attr.data-estado]="f.estado">{{ etiquetaEstado(f.estado) }}</span>
+        <div class="item__acciones">
+          @if (esEditable(f)) {
+            <a class="item__accion" [routerLink]="['/admin/funciones', f.id, 'editar']">Editar</a>
+          }
+          @if (esCancelable(f) && puedeCancelar()) {
+            <button type="button" class="item__accion" (click)="cancelar(f)">Cancelar</button>
+          }
+          <button type="button" class="item__accion item__accion--peligro" (click)="eliminar(f)">Eliminar</button>
+        </div>
+      </li>
+    } @empty {
+      <li class="funciones__vacio texto-secundario">No hay funciones programadas para este día.</li>
+    }
+  </ul>
+</section>

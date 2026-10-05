@@ -1,0 +1,19 @@
+:host {
+  display: inline-flex;
+  padding: 0.6rem;
+  border-radius: 14px;
+  background: #fff;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.cargando {
+  display: block;
+  max-width: 100%;
+  border-radius: 6px;
+  background: #ececec;
+}

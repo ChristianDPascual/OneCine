@@ -1,0 +1,262 @@
+<section class="admin-seccion precios">
+    <div class="precios__encabezado">
+        <span class="etiqueta-cine">Panel</span>
+        <h1 class="titulo-seccion">Precios y promos</h1>
+        <p class="texto-secundario">Cada bloque se guarda por separado.</p>
+    </div>
+
+    @if (mensajeExito(); as mensaje) {
+    <app-alerta tipo="exito" titulo="Listo" [mensaje]="mensaje" (cerrar)="mensajeExito.set(null)" />
+    }
+    @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+    }
+    @if (sinConfiguracion()) {
+    <app-alerta titulo="Falta la configuración"
+        mensaje="No existe la fila de configuración (id = 1) en la base. Creala desde Supabase para poder editar precios y puntos."
+        (cerrar)="sinConfiguracion.set(false)" />
+    }
+
+    <div class="precios__grilla">
+
+        <!-- ---------- Precios de entradas ---------- -->
+        <form class="tarjeta" [formGroup]="formPrecios" (ngSubmit)="guardarPrecios()">
+            <header class="tarjeta__encabezado">
+                <h2 class="tarjeta__titulo">Precio de las entradas</h2>
+                <p class="texto-secundario">Precio sugerido al cargar una película. Después se puede ajustar película
+                    por película.</p>
+            </header>
+
+            <div class="tarjeta__campos">
+                <div class="campo">
+                    <label for="precio-estreno">Estrenos ($)</label>
+                    <input id="precio-estreno" type="number" inputmode="decimal" min="1" step="0.01"
+                        formControlName="precio_estreno"
+                        [attr.aria-invalid]="formPrecios.controls.precio_estreno.touched && formPrecios.controls.precio_estreno.invalid" />
+                    @if (formPrecios.controls.precio_estreno.touched && formPrecios.controls.precio_estreno.invalid) {
+                    <p class="campo__error">Ingresá un precio mayor a 0.</p>
+                    }
+                </div>
+                <div class="campo">
+                    <label for="precio-clasico">Clásicos ($)</label>
+                    <input id="precio-clasico" type="number" inputmode="decimal" min="1" step="0.01"
+                        formControlName="precio_clasico"
+                        [attr.aria-invalid]="formPrecios.controls.precio_clasico.touched && formPrecios.controls.precio_clasico.invalid" />
+                    @if (formPrecios.controls.precio_clasico.touched && formPrecios.controls.precio_clasico.invalid) {
+                    <p class="campo__error">Ingresá un precio mayor a 0.</p>
+                    }
+                </div>
+            </div>
+
+            <footer class="tarjeta__pie">
+                <span class="tarjeta__estado" [attr.data-estado]="estado().precios" aria-live="polite">
+                    @switch (estado().precios) {
+                    @case ('ok') { ✔ Guardado }
+                    @case ('error') { No se pudo guardar }
+                    }
+                </span>
+                <button type="submit" class="tarjeta__guardar"
+                    [disabled]="estado().precios === 'guardando' || formPrecios.pristine">
+                    {{ estado().precios === 'guardando' ? 'Guardando…' : 'Guardar' }}
+                </button>
+            </footer>
+        </form>
+
+        <!-- ---------- Primera compra ---------- -->
+        <form class="tarjeta" [formGroup]="formPrimeraCompra" (ngSubmit)="guardarPrimeraCompra()">
+            <header class="tarjeta__encabezado">
+                <h2 class="tarjeta__titulo">Descuento de primera compra</h2>
+                <p class="texto-secundario">Beneficio para los clientes registrados en su primera compra.</p>
+            </header>
+
+            <div class="tarjeta__campos">
+                <div class="campo">
+                    <label for="primera-porcentaje">Descuento (%)</label>
+                    <input id="primera-porcentaje" type="number" inputmode="numeric" min="1" max="100" step="1"
+                        formControlName="porcentaje"
+                        [attr.aria-invalid]="formPrimeraCompra.controls.porcentaje.touched && formPrimeraCompra.controls.porcentaje.invalid" />
+                    @if (formPrimeraCompra.controls.porcentaje.touched && formPrimeraCompra.controls.porcentaje.invalid) {
+                    <p class="campo__error">Entre 1 y 100.</p>
+                    }
+                </div>
+                <label class="interruptor tarjeta__interruptor">
+                    <input type="checkbox" formControlName="activo" />
+                    <span class="interruptor__control" aria-hidden="true"></span>
+                    <span>Activo</span>
+                </label>
+            </div>
+
+            <footer class="tarjeta__pie">
+                <span class="tarjeta__estado" [attr.data-estado]="estado().primeraCompra" aria-live="polite">
+                    @switch (estado().primeraCompra) {
+                    @case ('ok') { ✔ Guardado }
+                    @case ('error') { No se pudo guardar }
+                    @default { @if (!primeraCompra()) { Todavía no está creado } }
+                    }
+                </span>
+                <button type="submit" class="tarjeta__guardar"
+                    [disabled]="estado().primeraCompra === 'guardando' || (primeraCompra() !== null && formPrimeraCompra.pristine)">
+                    {{ estado().primeraCompra === 'guardando' ? 'Guardando…' : (primeraCompra() ? 'Guardar' : 'Crear') }}
+                </button>
+            </footer>
+        </form>
+
+        <!-- ---------- Mayores ---------- -->
+        <form class="tarjeta" [formGroup]="formMayores" (ngSubmit)="guardarMayores()">
+            <header class="tarjeta__encabezado">
+                <h2 class="tarjeta__titulo">Descuento por edad</h2>
+                <p class="texto-secundario">Para clientes registrados que tengan la edad indicada o más.</p>
+            </header>
+
+            <div class="tarjeta__campos">
+                <div class="campo">
+                    <label for="mayores-edad">Desde los (años)</label>
+                    <input id="mayores-edad" type="number" inputmode="numeric" min="18" max="120" step="1"
+                        formControlName="edad_minima"
+                        [attr.aria-invalid]="formMayores.controls.edad_minima.touched && formMayores.controls.edad_minima.invalid" />
+                    @if (formMayores.controls.edad_minima.touched && formMayores.controls.edad_minima.invalid) {
+                    <p class="campo__error">Una edad entera entre 18 y 120.</p>
+                    }
+                </div>
+                <div class="campo">
+                    <label for="mayores-porcentaje">Descuento (%)</label>
+                    <input id="mayores-porcentaje" type="number" inputmode="numeric" min="1" max="100" step="1"
+                        formControlName="porcentaje"
+                        [attr.aria-invalid]="formMayores.controls.porcentaje.touched && formMayores.controls.porcentaje.invalid" />
+                    @if (formMayores.controls.porcentaje.touched && formMayores.controls.porcentaje.invalid) {
+                    <p class="campo__error">Entre 1 y 100.</p>
+                    }
+                </div>
+                <label class="interruptor tarjeta__interruptor">
+                    <input type="checkbox" formControlName="activo" />
+                    <span class="interruptor__control" aria-hidden="true"></span>
+                    <span>Activo</span>
+                </label>
+            </div>
+
+            <footer class="tarjeta__pie">
+                <span class="tarjeta__estado" [attr.data-estado]="estado().mayores" aria-live="polite">
+                    @switch (estado().mayores) {
+                    @case ('ok') { ✔ Guardado }
+                    @case ('error') { No se pudo guardar }
+                    @default { @if (!mayores()) { Todavía no está creado } }
+                    }
+                </span>
+                <button type="submit" class="tarjeta__guardar"
+                    [disabled]="estado().mayores === 'guardando' || (mayores() !== null && formMayores.pristine)">
+                    {{ estado().mayores === 'guardando' ? 'Guardando…' : (mayores() ? 'Guardar' : 'Crear') }}
+                </button>
+            </footer>
+        </form>
+
+        <!-- ---------- Puntos y reglas ---------- -->
+        <form class="tarjeta" [formGroup]="formPuntos" (ngSubmit)="guardarPuntos()">
+            <header class="tarjeta__encabezado">
+                <h2 class="tarjeta__titulo">Puntos y reglas</h2>
+                <p class="texto-secundario">Programa de fidelización, butacas VIP y cancelaciones.</p>
+            </header>
+
+            <div class="tarjeta__campos">
+                <div class="campo">
+                    <label for="puntos-peso">Puntos por cada $1</label>
+                    <input id="puntos-peso" type="number" inputmode="numeric" min="0" step="1"
+                        formControlName="puntos_por_peso"
+                        [attr.aria-invalid]="formPuntos.controls.puntos_por_peso.touched && formPuntos.controls.puntos_por_peso.invalid" />
+                    @if (formPuntos.controls.puntos_por_peso.touched && formPuntos.controls.puntos_por_peso.invalid) {
+                    <p class="campo__error">Un número entero (0 o más), sin decimales.</p>
+                    }
+                </div>
+                <div class="campo">
+                    <label for="puntos-entrada">Puntos para una entrada gratis</label>
+                    <input id="puntos-entrada" type="number" inputmode="numeric" min="1" step="1"
+                        formControlName="puntos_entrada_gratis"
+                        [attr.aria-invalid]="formPuntos.controls.puntos_entrada_gratis.touched && formPuntos.controls.puntos_entrada_gratis.invalid" />
+                    @if (formPuntos.controls.puntos_entrada_gratis.touched && formPuntos.controls.puntos_entrada_gratis.invalid) {
+                    <p class="campo__error">Un número entero mayor a 0.</p>
+                    }
+                </div>
+                <div class="campo">
+                    <label for="recargo-vip">Recargo VIP ($)</label>
+                    <input id="recargo-vip" type="number" inputmode="numeric" min="0" step="1"
+                        formControlName="recargo_vip"
+                        [attr.aria-invalid]="formPuntos.controls.recargo_vip.touched && formPuntos.controls.recargo_vip.invalid" />
+                    @if (formPuntos.controls.recargo_vip.touched && formPuntos.controls.recargo_vip.invalid) {
+                    <p class="campo__error">Un número entero (0 o más), sin decimales.</p>
+                    } @else {
+                    <p class="tarjeta__ayuda">Se suma al precio de las butacas VIP.</p>
+                    }
+                </div>
+                <div class="campo">
+                    <label for="horas-cancelacion">Cancelación hasta (horas antes)</label>
+                    <input id="horas-cancelacion" type="number" inputmode="numeric" min="0" max="72" step="1"
+                        formControlName="horas_limite_cancelacion"
+                        [attr.aria-invalid]="formPuntos.controls.horas_limite_cancelacion.touched && formPuntos.controls.horas_limite_cancelacion.invalid" />
+                    @if (formPuntos.controls.horas_limite_cancelacion.touched && formPuntos.controls.horas_limite_cancelacion.invalid) {
+                    <p class="campo__error">Un número entero entre 0 y 72.</p>
+                    }
+                </div>
+            </div>
+
+            <footer class="tarjeta__pie">
+                <span class="tarjeta__estado" [attr.data-estado]="estado().puntos" aria-live="polite">
+                    @switch (estado().puntos) {
+                    @case ('ok') { ✔ Guardado }
+                    @case ('error') { No se pudo guardar }
+                    }
+                </span>
+                <button type="submit" class="tarjeta__guardar"
+                    [disabled]="estado().puntos === 'guardando' || formPuntos.pristine">
+                    {{ estado().puntos === 'guardando' ? 'Guardando…' : 'Guardar' }}
+                </button>
+            </footer>
+        </form>
+    </div>
+
+    <!-- ---------- Promociones ---------- -->
+    <section class="promos" aria-labelledby="promos-titulo">
+        <div class="promos__encabezado">
+            <div>
+                <h2 id="promos-titulo" class="tarjeta__titulo">Promociones</h2>
+                <p class="texto-secundario">Descuentos por un período, por ejemplo "Martes 2x1" o "Vacaciones de
+                    invierno".</p>
+            </div>
+            <a routerLink="/admin/precios/promociones/nueva" class="promos__nueva">+ Nueva promoción</a>
+        </div>
+
+        <ul class="promos__lista">
+            @for (promo of promociones(); track promo.id) {
+            <li class="promo">
+                <div class="promo__porcentaje">{{ promo.porcentaje }}%</div>
+                <div class="promo__datos">
+                    <span class="titulo-pelicula">{{ promo.nombre }}</span>
+                    <span class="texto-secundario">
+                        @if (promo.vigente_desde || promo.vigente_hasta) {
+                        {{ promo.vigente_desde ? 'Desde ' + (promo.vigente_desde | date: 'd MMM y' : 'UTC') : '' }}
+                        {{ promo.vigente_hasta ? 'hasta ' + (promo.vigente_hasta | date: 'd MMM y' : 'UTC') : '' }}
+                        } @else {
+                        Sin fecha de vencimiento
+                        }
+                    </span>
+                </div>
+                <span class="promo__estado" [attr.data-estado]="estadoDe(promo)">
+                    @switch (estadoDe(promo)) {
+                    @case ('vigente') { Vigente }
+                    @case ('programada') { Programada }
+                    @case ('vencida') { Vencida }
+                    @case ('inactiva') { Inactiva }
+                    }
+                </span>
+                <div class="promo__acciones">
+                    <a class="promo__accion"
+                        [routerLink]="['/admin/precios/promociones', promo.id, 'editar']">Editar</a>
+                    <button type="button" class="promo__accion" (click)="alternarActiva(promo)">
+                        {{ promo.activo ? 'Desactivar' : 'Activar' }}
+                    </button>
+                </div>
+            </li>
+            } @empty {
+            <li class="promos__vacio texto-secundario">Todavía no hay promociones.</li>
+            }
+        </ul>
+    </section>
+</section>

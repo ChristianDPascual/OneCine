@@ -1,0 +1,64 @@
+.confirmacion {
+  width: min(440px, calc(100vw - 2rem));
+  padding: 0;
+  border: 1px solid #2a2a30;
+  border-radius: 16px;
+  background: var(--cinema-surface);
+  color: var(--cinema-white);
+}
+
+.confirmacion[open] {
+  animation: aparecer 0.2s ease-out;
+}
+
+.confirmacion::backdrop {
+  background: rgb(0 0 0 / 0.65);
+  backdrop-filter: blur(3px);
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.confirmacion__contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  padding: clamp(1.5rem, 5vw, 2rem);
+  text-align: center;
+}
+
+.confirmacion__icono {
+  width: 48px;
+  height: 48px;
+  fill: none;
+  stroke: var(--cinema-gold);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.confirmacion__titulo {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.confirmacion__mensaje {
+  color: var(--cinema-muted);
+  font-size: 0.95rem;
+}
+
+.confirmacion__botones {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.confirmacion__botones .boton--primario {
+  margin-top: 0;
+}

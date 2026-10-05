@@ -1,0 +1,336 @@
+.productos__encabezado {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.productos__encabezado .etiqueta-cine {
+  color: var(--one-red);
+}
+
+.productos__botones {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.productos__nuevo,
+.productos__secundario {
+  padding: 0.75rem 1.4rem;
+  border-radius: 999px;
+  font-family: var(--font-title);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.productos__nuevo {
+  background: var(--one-red);
+  color: var(--cinema-white);
+}
+
+.productos__nuevo:hover,
+.productos__nuevo:focus-visible {
+  background: var(--one-red-dark);
+}
+
+.productos__secundario {
+  border: 1px solid #3a3a42;
+  color: var(--cinema-white);
+}
+
+.productos__secundario:hover,
+.productos__secundario:focus-visible {
+  border-color: var(--one-red);
+  color: var(--one-red);
+}
+
+.productos__aviso {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed #3a3a42;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.productos__aviso .productos__nuevo {
+  margin-top: 0.5rem;
+}
+
+/* ---------- Filtros (mismo diseño que Películas) ---------- */
+
+.filtros-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin: 1rem 0 1.75rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+}
+
+.filtros-admin__superior {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filtros-admin__buscador {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1 1 280px;
+  max-width: 460px;
+  padding: 0.65rem 1.1rem;
+  border: 1px solid #2a2a30;
+  border-radius: 999px;
+  background: #1c1c21;
+  color: var(--cinema-muted);
+}
+
+.filtros-admin__buscador:focus-within {
+  border-color: var(--one-red);
+}
+
+.filtros-admin__buscador svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.filtros-admin__buscador input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--cinema-white);
+}
+
+.filtros-admin__resumen {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.filtros-admin__borrar {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--one-red);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--one-red);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.filtros-admin__borrar:hover,
+.filtros-admin__borrar:focus-visible {
+  background: var(--one-red);
+  color: var(--cinema-white);
+}
+
+.filtros-admin__fila {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  justify-content: start;
+  gap: 1.25rem 2.5rem;
+}
+
+.filtros-admin__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.filtros-admin__titulo {
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filtros-admin__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filtro-chip {
+  padding: 0.45rem 0.95rem;
+  border: 1px solid #2a2a30;
+  border-radius: 999px;
+  background: #222228;
+  color: var(--cinema-white);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.filtro-chip:hover {
+  border-color: var(--cinema-muted);
+}
+
+.filtro-chip--activo,
+.filtro-chip--activo:hover {
+  background: var(--one-red);
+  border-color: var(--one-red);
+}
+
+/* ---------- Grupos y tarjetas ---------- */
+
+.productos__grupo {
+  margin-bottom: 2rem;
+}
+
+.productos__categoria {
+  margin-bottom: 1rem;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.productos__categoria .texto-secundario {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+.productos__grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+
+.producto {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+}
+
+.producto--inactivo .producto__imagen img,
+.producto--inactivo .producto__imagen > span {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+.producto__imagen > span {
+  color: #8a8a90;
+}
+.producto__imagen {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  color: var(--cinema-muted);
+  font-size: 0.85rem;
+}
+
+.producto__imagen img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.75rem;
+}
+
+.producto__badges {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  right: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgb(11 11 13 / 0.8);
+  color: var(--cinema-white);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge--dorado {
+  background: var(--cinema-gold);
+  color: var(--cinema-black);
+}
+
+.badge--gris {
+  background: #3a3a42;
+}
+
+.producto__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+}
+
+.producto__descripcion {
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+}
+
+.producto__precio {
+  color: var(--cinema-gold);
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.producto__acciones {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.producto__accion {
+  padding: 0.5rem;
+  border: 1px solid #3a3a42;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cinema-white);
+  font-size: 0.85rem;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.producto__accion:hover,
+.producto__accion:focus-visible {
+  border-color: var(--one-red);
+  color: var(--one-red);
+}
+
+@media (max-width: 700px) {
+  .filtros-admin__fila {
+    grid-template-columns: 1fr;
+  }
+}

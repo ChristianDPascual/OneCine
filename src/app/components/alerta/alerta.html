@@ -1,0 +1,25 @@
+<div
+  class="alerta"
+  [class.alerta--exito]="tipo() === 'exito'"
+  [attr.role]="tipo() === 'error' ? 'alert' : 'status'"
+>
+  <svg class="alerta__icono" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    @if (tipo() === 'error') {
+      <path d="M12 7v6M12 17h.01" />
+    } @else {
+      <path d="m8 12 3 3 5-6" />
+    }
+  </svg>
+
+  <div class="alerta__texto">
+    <p class="alerta__titulo">{{ titulo() }}</p>
+    <p class="alerta__mensaje">{{ mensaje() }}</p>
+  </div>
+
+  <button type="button" class="alerta__cerrar" aria-label="Cerrar alerta" (click)="cerrar.emit()">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  </button>
+</div>

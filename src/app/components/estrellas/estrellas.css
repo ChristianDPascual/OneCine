@@ -1,0 +1,23 @@
+:host {
+  display: inline-flex;
+  gap: 0.1em;
+  font-size: var(--tamano, 1rem);
+  line-height: 1;
+}
+
+.estrella {
+  position: relative;
+  display: inline-block;
+}
+
+.estrella__vacia {
+  color: rgb(255 255 255 / 0.18);
+}
+
+.estrella__llena {
+  position: absolute;
+  inset: 0 auto 0 0;
+  overflow: hidden;
+  color: var(--cinema-gold, #d4af37);
+  white-space: nowrap;
+}

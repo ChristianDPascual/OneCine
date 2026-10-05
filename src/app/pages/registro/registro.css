@@ -1,0 +1,73 @@
+.registro {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vw, 3rem) clamp(1rem, 5vw, 2rem) 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.registro__encabezado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.registro__encabezado .etiqueta-cine {
+  color: var(--one-red);
+}
+
+.registro__form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.registro__grupo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.1rem;
+  margin: 0;
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+}
+
+.registro__grupo legend {
+  padding: 0 0.5rem;
+  font-family: var(--font-title);
+  font-weight: 600;
+}
+
+.campo--completo {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 600px) {
+  .registro__grupo {
+    grid-template-columns: 1fr;
+  }
+}
+
+.registro__nacimiento {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 1.1rem;
+}
+
+.registro__subtitulo,
+.registro__nacimiento-mensaje {
+  grid-column: 1 / -1;
+}
+
+.registro__subtitulo {
+  font-size: 0.875rem;
+  color: var(--cinema-white);
+}
+
+.registro__fecha {
+  color: var(--cinema-gold);
+  font-size: 0.9rem;
+}

@@ -1,0 +1,64 @@
+<dialog #dialogo class="login" aria-labelledby="login-titulo" (close)="cerrar.emit()"
+  (click)="cerrarSiClicFuera($event)">
+  <div class="login__contenido">
+    <header class="login__encabezado">
+      <span id="login-titulo">Iniciá sesión en OneCine</span>
+      <button type="button" class="login__cerrar" aria-label="Cerrar" (click)="dialogo.close()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </header>
+
+    <p class="etiqueta-cine login__saludo">¡Hola! Qué bueno verte por acá</p>
+
+    <form class="login__form" [formGroup]="formulario" (ngSubmit)="ingresar()">
+      <div class="campo">
+        <label for="login-email">Correo electrónico</label>
+        <input id="login-email" type="email" formControlName="email" autocomplete="email" autofocus
+          [attr.aria-invalid]="email.touched && email.invalid" aria-describedby="login-email-error" />
+        @if (email.touched && email.invalid) {
+        <p id="login-email-error" class="campo__error">
+          @if (email.hasError('required')) {
+          Ingresá tu correo electrónico.
+          } @else {
+          El correo no tiene un formato válido.
+          }
+        </p>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="login-password">Contraseña</label>
+        <div class="campo__password">
+          <input id="login-password" [type]="verPassword() ? 'text' : 'password'" formControlName="password"
+            autocomplete="current-password" [attr.aria-invalid]="password.touched && password.invalid"
+            aria-describedby="login-password-error" />
+          <button type="button" class="campo__ojo"
+            [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [attr.aria-pressed]="verPassword()" (click)="verPassword.set(!verPassword())">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+              @if (verPassword()) {
+              <path d="M3 3l18 18" />
+              }
+            </svg>
+          </button>
+        </div>
+        @if (password.touched && password.invalid) {
+        <p id="login-password-error" class="campo__error">Ingresá tu contraseña.</p>
+        }
+      </div>
+
+      @if (mensajeError(); as mensaje) {
+      <app-alerta titulo="No pudimos iniciar sesión" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+      }
+
+      <button type="submit" class="boton boton--primario" [disabled]="enviando()">
+        {{ enviando() ? 'Ingresando…' : 'Iniciar sesión' }}
+      </button>
+      <a routerLink="/registro" class="boton boton--secundario" (click)="dialogo.close()">Registrarse</a>
+    </form>
+  </div>
+</dialog>

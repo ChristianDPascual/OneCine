@@ -1,0 +1,194 @@
+<section class="registro">
+    <header class="registro__encabezado">
+        <span class="etiqueta-cine">Registro</span>
+        <h1 class="titulo-seccion">Creá tu cuenta en OneCine</h1>
+        <p class="texto-secundario">Registrate y obtené un descuento en tu primera compra.</p>
+    </header>
+
+    <form class="registro__form" [formGroup]="formulario" (ngSubmit)="registrar()">
+        <fieldset class="registro__grupo">
+            <legend>Datos de acceso</legend>
+
+            <div class="campo campo--completo">
+                <label for="reg-email">Correo electrónico</label>
+                <input id="reg-email" type="email" formControlName="email" autocomplete="email"
+                    [attr.aria-invalid]="campos.email.touched && campos.email.invalid" />
+                @if (campos.email.touched && campos.email.invalid) {
+                <p class="campo__error">
+                    @if (campos.email.hasError('required')) { Ingresá tu correo electrónico. }
+                    @else { El correo no tiene un formato válido. }
+                </p>
+                }
+            </div>
+
+            <div class="campo">
+                <label for="reg-password">Contraseña</label>
+                <input id="reg-password" type="password" formControlName="password" autocomplete="new-password"
+                    [attr.aria-invalid]="campos.password.touched && campos.password.invalid" />
+                @if (campos.password.touched && campos.password.invalid) {
+                <p class="campo__error">
+                    @if (campos.password.hasError('required')) { Ingresá una contraseña. }
+                    @else if (campos.password.hasError('conEspacios')) { La contraseña no puede tener espacios. }
+                    @else { Debe tener al menos 6 caracteres. }
+                </p>
+                }
+            </div>
+
+            <div class="campo">
+                <label for="reg-confirmar">Repetir contraseña</label>
+                <input id="reg-confirmar" type="password" formControlName="confirmarPassword"
+                    autocomplete="new-password" [attr.aria-invalid]="campos.confirmarPassword.touched
+                 && (campos.confirmarPassword.invalid || formulario.hasError('noCoinciden'))" />
+                @if (campos.confirmarPassword.touched && campos.confirmarPassword.invalid) {
+                <p class="campo__error">Repetí la contraseña.</p>
+                } @else if (campos.confirmarPassword.touched && formulario.hasError('noCoinciden')) {
+                <p class="campo__error">Las contraseñas no coinciden.</p>
+                }
+            </div>
+        </fieldset>
+
+        <fieldset class="registro__grupo">
+            <legend>Datos personales</legend>
+
+            <div class="campo">
+                <label for="reg-nombre">Nombre</label>
+                <input id="reg-nombre" type="text" formControlName="nombre" autocomplete="given-name"
+                    autocapitalize="words" maxlength="50"
+                    [attr.aria-invalid]="campos.nombre.touched && campos.nombre.invalid" />
+                @if (campos.nombre.touched && campos.nombre.invalid) {
+                <p class="campo__error">
+                    @if (campos.nombre.hasError('required')) { Ingresá tu nombre. }
+                    @else if (campos.nombre.hasError('minlength')) { Debe tener al menos 2 letras. }
+                    @else { Usá solo letras. Se permiten espacios, guiones y apóstrofes. }
+                </p>
+                }
+            </div>
+
+            <div class="campo">
+                <label for="reg-apellido">Apellido</label>
+                <input id="reg-apellido" type="text" formControlName="apellido" autocomplete="family-name"
+                    autocapitalize="words" maxlength="50"
+                    [attr.aria-invalid]="campos.apellido.touched && campos.apellido.invalid" />
+                @if (campos.apellido.touched && campos.apellido.invalid) {
+                <p class="campo__error">
+                    @if (campos.apellido.hasError('required')) { Ingresá tu apellido. }
+                    @else if (campos.apellido.hasError('minlength')) { Debe tener al menos 2 letras. }
+                    @else { Usá solo letras. Se permiten espacios, guiones y apóstrofes. }
+                </p>
+                }
+            </div>
+
+            <div class="registro__nacimiento" formGroupName="nacimiento" role="group" aria-labelledby="reg-nac-titulo">
+                <p id="reg-nac-titulo" class="registro__subtitulo">Fecha de nacimiento</p>
+
+                <div class="campo">
+                    <label for="reg-edad">Edad</label>
+                    <input id="reg-edad" type="number" inputmode="numeric" min="0" max="120" step="1"
+                        formControlName="edad"
+                        [attr.aria-invalid]="nacimiento.edad.touched && nacimiento.edad.invalid" />
+                </div>
+
+                <div class="campo">
+                    <label for="reg-mes">Mes</label>
+                    <select id="reg-mes" formControlName="mes">
+                        <option [ngValue]="null" disabled>Elegí el mes</option>
+                        @for (nombreMes of meses; track nombreMes; let i = $index) {
+                        <option [ngValue]="i + 1">{{ nombreMes }}</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="reg-dia">Día</label>
+                    <input id="reg-dia" type="number" inputmode="numeric" min="1" max="31" step="1"
+                        formControlName="dia" [attr.aria-invalid]="(nacimiento.dia.touched && nacimiento.dia.invalid)
+                   || campos.nacimiento.hasError('diaInexistente')
+                   || campos.nacimiento.hasError('noBisiesto')" />
+                </div>
+
+                <div class="registro__nacimiento-mensaje" aria-live="polite">
+                    @if (nacimiento.edad.touched && nacimiento.edad.invalid) {
+                    <p class="campo__error">
+                        @if (nacimiento.edad.hasError('required')) { Ingresá tu edad. }
+                        @else { Ingresá una edad entera entre 3 y 120. }
+                    </p>
+                    } @else if (nacimiento.dia.touched && nacimiento.dia.invalid) {
+                    <p class="campo__error">
+                        @if (nacimiento.dia.hasError('required')) { Ingresá el día. }
+                        @else { Ingresá un día entre 1 y 31. }
+                    </p>
+                    } @else if (campos.nacimiento.hasError('diaInexistente')) {
+                    <p class="campo__error">
+                        {{ meses[nacimiento.mes.value! - 1] }} tiene
+                        {{ campos.nacimiento.getError('diaInexistente').maximo }} días.
+                    </p>
+                    } @else if (campos.nacimiento.hasError('noBisiesto')) {
+                    <p class="campo__error">
+                        Según tu edad naciste en {{ campos.nacimiento.getError('noBisiesto').anio }},
+                        que no fue bisiesto: ese febrero tuvo 28 días.
+                    </p>
+                    } @else if (fechaTexto) {
+                    <p class="registro__fecha">Naciste el {{ fechaTexto }}</p>
+                    } @else if (nacimiento.mes.disabled) {
+                    <p class="texto-secundario">Completá tu edad para elegir el mes.</p>
+                    } @else if (campos.nacimiento.touched && campos.nacimiento.hasError('fechaIncompleta')) {
+                    <p class="campo__error">Elegí el mes y escribí el día.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="campo">
+                <label for="reg-sangre">Tipo de sangre</label>
+                <select id="reg-sangre" formControlName="tipoSangre"
+                    [attr.aria-invalid]="campos.tipoSangre.touched && campos.tipoSangre.invalid">
+                    <option value="" disabled>Elegí una opción</option>
+                    @for (tipo of tiposSangre; track tipo) {
+                    <option [value]="tipo">{{ tipo }}</option>
+                    }
+                </select>
+                @if (campos.tipoSangre.touched && campos.tipoSangre.invalid) {
+                <p class="campo__error">Elegí tu tipo de sangre.</p>
+                }
+            </div>
+
+            <div class="campo">
+                <label for="reg-ojos">Color de ojos</label>
+                <select id="reg-ojos" formControlName="colorOjos"
+                    [attr.aria-invalid]="campos.colorOjos.touched && campos.colorOjos.invalid">
+                    <option value="" disabled>Elegí una opción</option>
+                    @for (color of coloresOjos; track color) {
+                    <option [value]="color">{{ color }}</option>
+                    }
+                </select>
+                @if (campos.colorOjos.touched && campos.colorOjos.invalid) {
+                <p class="campo__error">Elegí el color de tus ojos.</p>
+                }
+            </div>
+
+            <div class="campo">
+                <label for="reg-vacaciones">Días de vacaciones por año</label>
+                <input id="reg-vacaciones" type="number" inputmode="numeric" min="0" max="365" step="1"
+                    formControlName="diasVacaciones"
+                    [attr.aria-invalid]="campos.diasVacaciones.touched && campos.diasVacaciones.invalid" />
+                @if (campos.diasVacaciones.touched && campos.diasVacaciones.invalid) {
+                <p class="campo__error">
+                    @if (campos.diasVacaciones.hasError('required')) { Ingresá la cantidad de días. }
+                    @else { Debe ser un número entero entre 0 y 365. }
+                </p>
+                }
+            </div>
+        </fieldset>
+
+        @if (mensajeError(); as mensaje) {
+        <app-alerta titulo="No pudimos crear tu cuenta" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+        }
+
+        @if (mensajeExito(); as mensaje) {
+        <app-alerta tipo="exito" titulo="¡Registro exitoso!" [mensaje]="mensaje" (cerrar)="irAlInicio()" />
+        }
+
+        <button type="submit" class="boton boton--primario" [disabled]="enviando() || registroCompletado()">
+            {{ enviando() ? 'Creando cuenta…' : 'Crear cuenta' }}
+        </button>
+    </form>
+</section>

@@ -1,0 +1,70 @@
+<section class="cartelera">
+  <header class="cartelera__encabezado">
+    <div>
+      <span class="etiqueta-cine">OneCine</span>
+      <h1 class="titulo-seccion">{{ titulo() }}</h1>
+    </div>
+    @if (!cargando() && !hayError()) {
+      <p class="texto-secundario cartelera__cantidad" aria-live="polite">
+        {{ peliculas().length }} {{ peliculas().length === 1 ? 'película' : 'películas' }}
+      </p>
+    }
+  </header>
+
+  <!-- Accesos rápidos -->
+  <nav class="pestanas" aria-label="Tipo de lanzamiento">
+    <button type="button" class="pestana" [class.activa]="!busqueda().lanzamiento" (click)="elegirLanzamiento(null)">
+      Todas
+    </button>
+    @for (p of pestanas; track p.valor) {
+      <button type="button" class="pestana" [class.activa]="busqueda().lanzamiento === p.valor"
+              [attr.aria-pressed]="busqueda().lanzamiento === p.valor" (click)="elegirLanzamiento(p.valor)">
+        {{ p.etiqueta }}
+      </button>
+    }
+  </nav>
+
+  <!-- Filtros activos -->
+  @if (chips().length > 0) {
+    <div class="chips" aria-label="Filtros aplicados">
+      @for (chip of chips(); track chip.etiqueta) {
+        <button type="button" class="chip-filtro" (click)="quitar(chip)" [attr.aria-label]="'Quitar filtro ' + chip.etiqueta">
+          {{ chip.etiqueta }}
+          <span aria-hidden="true">✕</span>
+        </button>
+      }
+      <button type="button" class="chips__borrar" (click)="borrarTodo()">Borrar todo</button>
+    </div>
+  }
+
+  <!-- Resultados -->
+  @if (hayError()) {
+    <div class="cartelera__estado" role="alert">
+      <p class="titulo-pelicula">No pudimos cargar las películas</p>
+      <p class="texto-secundario">Revisá tu conexión e intentá de nuevo.</p>
+      <button type="button" class="cartelera__boton" (click)="reintentar()">Reintentar</button>
+    </div>
+  } @else {
+    <div class="grilla" [attr.aria-busy]="cargando()">
+      @if (cargando()) {
+        @for (e of esqueletos; track e) {
+          <div class="esqueleto" aria-hidden="true"></div>
+        }
+      } @else {
+        @for (pelicula of peliculas(); track pelicula.id) {
+          <app-tarjeta-pelicula [pelicula]="pelicula" />
+        } @empty {
+          <div class="cartelera__estado">
+            <p class="titulo-pelicula">No encontramos películas</p>
+            <p class="texto-secundario">Probá con otro título o quitá algún filtro.</p>
+            @if (chips().length > 0) {
+              <button type="button" class="cartelera__boton" (click)="borrarTodo()">Ver toda la cartelera</button>
+            } @else {
+              <a routerLink="/" class="cartelera__boton">Volver al inicio</a>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+</section>

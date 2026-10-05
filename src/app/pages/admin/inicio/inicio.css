@@ -1,0 +1,36 @@
+.admin-inicio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-inicio__etiqueta {
+  color: var(--one-red);
+}
+
+.admin-inicio__grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-auto-rows: 1fr; /* todas las filas con la misma altura (la de la tarjeta más alta) */
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.admin-inicio__tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.25rem;
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+  color: var(--cinema-white);
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.admin-inicio__tarjeta:hover,
+.admin-inicio__tarjeta:focus-visible {
+  border-color: var(--one-red);
+  transform: translateY(-2px);
+}

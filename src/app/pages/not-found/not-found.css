@@ -1,0 +1,32 @@
+.not-found {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.not-found__codigo {
+  font-size: clamp(6rem, 25vw, 12rem);
+  color: var(--one-red);
+}
+
+.not-found__boton {
+  margin-top: 1rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 999px;
+  background: var(--one-red);
+  color: var(--cinema-white);
+  font-family: var(--font-title);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.not-found__boton:hover,
+.not-found__boton:focus-visible {
+  background: var(--one-red-dark);
+}

@@ -1,0 +1,60 @@
+<section class="admin-seccion">
+  <div class="salas__encabezado">
+    <div>
+      <span class="etiqueta-cine">Panel</span>
+      <h1 class="titulo-seccion">Salas</h1>
+    </div>
+    <a routerLink="/admin/salas/nueva" class="salas__nueva">+ Nueva sala</a>
+  </div>
+
+  @if (mensajeExito(); as mensaje) {
+    <app-alerta tipo="exito" titulo="Listo" [mensaje]="mensaje" (cerrar)="mensajeExito.set(null)" />
+  }
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+
+  <div class="salas__grilla">
+    @for (sala of salas(); track sala.id) {
+      <article class="sala">
+        <div class="sala__cabecera">
+          <h2 class="sala__numero">Sala {{ sala.numero }}</h2>
+          <span class="sala__formato">{{ sala.formato }}</span>
+        </div>
+        <p class="texto-secundario sala__descripcion">{{ descripcionFormato[sala.formato] }}</p>
+
+        <dl class="sala__capacidad">
+          <div class="sala__total">
+            <dt>Butacas</dt>
+            <dd>{{ sala.total }}</dd>
+          </div>
+          <div>
+            <dt><span class="punto punto--estandar" aria-hidden="true"></span>Estándar</dt>
+            <dd>{{ sala.capacidad.estandar }}</dd>
+          </div>
+          <div>
+            <dt><span class="punto punto--vip" aria-hidden="true"></span>VIP</dt>
+            <dd>{{ sala.capacidad.vip }}</dd>
+          </div>
+          <div>
+            <dt><span class="punto punto--accesible" aria-hidden="true"></span>Accesibles</dt>
+            <dd>{{ sala.capacidad.accesible }}</dd>
+          </div>
+        </dl>
+
+        <div class="sala__acciones">
+          <a class="sala__accion sala__accion--completo" [routerLink]="['/admin/salas', sala.id]">Ver butacas</a>
+          <a class="sala__accion" [routerLink]="['/admin/salas', sala.id, 'editar']">Editar</a>
+          <button type="button" class="sala__accion sala__accion--peligro" (click)="eliminar(sala)">Eliminar</button>
+        </div>
+      </article>
+    } @empty {
+      @if (cargado() && !mensajeError()) {
+        <div class="salas__vacio">
+          <p class="titulo-pelicula">Todavía no hay salas</p>
+          <p class="texto-secundario">Al crear una sala, la base genera sus butacas automáticamente.</p>
+        </div>
+      }
+    }
+  </div>
+</section>

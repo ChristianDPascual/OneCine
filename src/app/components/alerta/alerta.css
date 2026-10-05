@@ -1,0 +1,74 @@
+.alerta {
+  --acento: var(--one-red);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--acento);
+  border-left-width: 4px;
+  border-radius: 10px;
+  background: var(--cinema-surface);
+  color: var(--cinema-white);
+  animation: aparecer 0.2s ease-out;
+}
+
+.alerta--exito {
+  --acento: #4ade80;
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.alerta__icono {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: var(--acento);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.alerta__texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.alerta__titulo {
+  font-family: var(--font-title);
+  font-weight: 600;
+}
+
+.alerta__mensaje {
+  font-size: 0.9rem;
+  color: var(--cinema-muted);
+}
+
+.alerta__cerrar {
+  display: grid;
+  place-items: center;
+  padding: 0.2rem;
+  border: none;
+  background: transparent;
+  color: var(--cinema-muted);
+  cursor: pointer;
+}
+
+.alerta__cerrar:hover,
+.alerta__cerrar:focus-visible {
+  color: var(--cinema-white);
+}
+
+.alerta__cerrar svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}

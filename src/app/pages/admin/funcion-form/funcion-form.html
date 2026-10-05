@@ -1,0 +1,290 @@
+<section class="funcion-form">
+  <header class="funcion-form__encabezado">
+    <span class="etiqueta-cine">Funciones</span>
+    <h1 class="titulo-seccion">{{ esEdicion() ? 'Editar función' : 'Nueva función' }}</h1>
+  </header>
+
+  @if (noEncontrada()) {
+    <div class="funcion-form__aviso" role="alert">
+      <p class="titulo-pelicula">Función no encontrada</p>
+      <p class="texto-secundario">La función que querés editar no existe. Volvé al listado con el botón de arriba.</p>
+    </div>
+  } @else if (noEditable()) {
+    <div class="funcion-form__aviso" role="alert">
+      <p class="titulo-pelicula">Esta función no se puede editar</p>
+      <p class="texto-secundario">Solo se editan funciones programadas a partir de mañana.</p>
+    </div>
+  } @else {
+    <form class="funcion-form__form" [formGroup]="formulario" (ngSubmit)="guardar()">
+
+      <!-- ---------- Película ---------- -->
+      <fieldset class="funcion-form__grupo">
+        <legend>Película</legend>
+
+        <div class="campo funcion-form__completo">
+          <label for="fun-pelicula">Película</label>
+          <select id="fun-pelicula" formControlName="pelicula_id"
+                  [attr.aria-invalid]="campos.pelicula_id.touched && campos.pelicula_id.invalid">
+            <option [ngValue]="null" disabled>Elegí una película</option>
+            @for (p of peliculas(); track p.id) {
+              <option [ngValue]="p.id">{{ p.titulo }} ({{ p.duracion_min }} min){{ p.es_clasico ? ' · Clásico' : '' }}</option>
+            }
+          </select>
+          @if (campos.pelicula_id.touched && campos.pelicula_id.invalid) {
+            <p class="campo__error">Elegí la película.</p>
+          }
+        </div>
+      </fieldset>
+
+      <!-- ---------- Cuándo ---------- -->
+      <fieldset class="funcion-form__grupo">
+        <legend>Cuándo</legend>
+
+        <!-- Una vez / varios días -->
+        @if (!esEdicion()) {
+          <div class="modo funcion-form__completo" role="radiogroup" aria-label="Frecuencia">
+            <button type="button" role="radio" class="modo__opcion" [class.activo]="!campos.repetir.value"
+                    [attr.aria-checked]="!campos.repetir.value" (click)="alternarRepetir(false)">Una sola vez</button>
+            <button type="button" role="radio" class="modo__opcion" [class.activo]="campos.repetir.value"
+                    [attr.aria-checked]="campos.repetir.value" (click)="alternarRepetir(true)">Varios días</button>
+          </div>
+        }
+
+        <div class="campo">
+          <label for="fun-fecha">{{ campos.repetir.value ? 'Desde' : 'Fecha' }}</label>
+          <app-campo-fecha inputId="fun-fecha" formControlName="fecha" />
+          @if (campos.fecha.touched && campos.fecha.hasError('required')) {
+            <p class="campo__error">Elegí la fecha.</p>
+          } @else if (campos.fecha.touched && campos.fecha.hasError('fechaIncompleta')) {
+            <p class="campo__error">Completá día, mes y año.</p>
+          } @else if (formulario.hasError('funcionSinAnticipacion')) {
+            <p class="campo__error">Las funciones se programan con al menos un día de anticipación (desde mañana).</p>
+          } @else {
+            <p class="texto-secundario funcion-form__ayuda">Desde mañana en adelante.</p>
+          }
+        </div>
+
+        @if (campos.repetir.value) {
+          <div class="campo">
+            <label for="fun-hasta">Hasta</label>
+            <app-campo-fecha inputId="fun-hasta" formControlName="hasta" />
+            @if (formulario.hasError('hastaRequerido') && campos.hasta.touched) {
+              <p class="campo__error">Indicá hasta qué fecha se repite.</p>
+            } @else if (formulario.hasError('hastaAnterior')) {
+              <p class="campo__error">"Hasta" no puede ser anterior a "Desde".</p>
+            } @else if (formulario.hasError('rangoMuyLargo')) {
+              <p class="campo__error">Se pueden programar hasta {{ diasMaximos }} días de una vez.</p>
+            }
+          </div>
+
+          <div class="campo funcion-form__completo">
+            <span class="funcion-form__etiqueta" id="fun-dias-titulo">Días de la semana</span>
+            <div class="dias-semana" role="group" aria-labelledby="fun-dias-titulo">
+              @for (d of diasSemana; track d.valor) {
+                <button type="button" class="dia-semana" [class.activo]="campos.dias_semana.value.includes(d.valor)"
+                        [attr.aria-pressed]="campos.dias_semana.value.includes(d.valor)" [title]="d.largo"
+                        (click)="alternarDia(d.valor)">{{ d.corto }}</button>
+              }
+            </div>
+            <div class="atajos">
+              <button type="button" (click)="elegirDias([1, 2, 3, 4, 5])">Lunes a viernes</button>
+              <button type="button" (click)="elegirDias([6, 0])">Fin de semana</button>
+              <button type="button" (click)="elegirDias([0, 1, 2, 3, 4, 5, 6])">Todos los días</button>
+            </div>
+            @if (formulario.hasError('sinDias')) {
+              <p class="campo__error">Elegí al menos un día de la semana.</p>
+            }
+          </div>
+        }
+
+        <!-- Hora: AM / PM + hora entera + minutos de a 15 -->
+        <div id="fun-hora" class="campo funcion-form__completo">
+          <span id="fun-hora-titulo" class="funcion-form__etiqueta">Hora de inicio</span>
+
+          <div class="horario" role="group" aria-labelledby="fun-hora-titulo"
+               [attr.aria-invalid]="campos.hora.touched && (campos.hora.invalid || formulario.hasError('horarioFueraDeRango'))">
+            <div class="horario__periodos" role="radiogroup" aria-label="Período">
+              @for (p of ['AM', 'PM']; track p) {
+                <button type="button" role="radio" class="horario__periodo"
+                        [class.activo]="periodo() === p" [attr.aria-checked]="periodo() === p"
+                        (click)="elegirPeriodo($any(p))">{{ p }}</button>
+              }
+            </div>
+
+            <div class="horario__horas" role="radiogroup" aria-label="Hora">
+              @for (h of opcionesHora(); track h.valor) {
+                <button type="button" role="radio" class="horario__opcion"
+                        [class.activa]="horaElegida() === h.valor" [attr.aria-checked]="horaElegida() === h.valor"
+                        [title]="h.nota ?? ''" (click)="elegirHora(h.valor)">
+                  {{ h.etiqueta }}
+                  @if (h.nota) { <small>{{ h.nota }}</small> }
+                </button>
+              }
+            </div>
+
+            <div class="horario__minutos" role="radiogroup" aria-label="Minutos">
+              @for (m of minutos; track m) {
+                <button type="button" role="radio" class="horario__opcion horario__opcion--minuto"
+                        [class.activa]="minutosElegidos() === m" [attr.aria-checked]="minutosElegidos() === m"
+                        [disabled]="!horaElegida() || (horaElegida() === '00' && m !== '00')"
+                        (click)="elegirMinutos(m)">:{{ m }}</button>
+              }
+            </div>
+          </div>
+
+          @if (campos.hora.value) {
+            <p class="funcion-form__hora-elegida">Empieza a las <strong>{{ campos.hora.value }} hs</strong>
+              @if (campos.repetir.value && textoDias()) { · todos los {{ textoDias() }} }
+            </p>
+          }
+          @if (campos.hora.touched && campos.hora.invalid) {
+            <p class="campo__error">Elegí la hora.</p>
+          } @else if (campos.hora.touched && formulario.hasError('horarioFueraDeRango')) {
+            <p class="campo__error">Las funciones empiezan entre las {{ apertura }} y las {{ ultimoInicio }} (medianoche).</p>
+          } @else if (!campos.hora.value) {
+            <p class="texto-secundario funcion-form__ayuda">De {{ apertura }} a {{ ultimoInicio }} (medianoche), cada 15 minutos.</p>
+          }
+        </div>
+
+        @if (rango(); as r) {
+          <div class="linea-tiempo funcion-form__completo">
+            <div class="linea-tiempo__tramo linea-tiempo__tramo--pelicula" [style.flex-grow]="pelicula()!.duracion_min">
+              <span>{{ r.inicio | date: 'HH:mm' }}</span>
+              <strong>{{ pelicula()!.titulo }}</strong>
+            </div>
+            <div class="linea-tiempo__tramo linea-tiempo__tramo--limpieza" [style.flex-grow]="minutosLimpieza">
+              <span>{{ r.fin | date: 'HH:mm' }}</span>
+              <strong>Limpieza</strong>
+            </div>
+            <span class="linea-tiempo__fin">{{ r.finLimpieza | date: 'HH:mm' }}</span>
+          </div>
+          <p class="funcion-form__nota funcion-form__completo">
+            Termina a las <strong>{{ r.fin | date: 'HH:mm' }}</strong> y la sala queda libre a las
+            <strong>{{ r.finLimpieza | date: 'HH:mm' }}</strong> ({{ minutosLimpieza }} min de limpieza).
+          </p>
+        }
+      </fieldset>
+
+      <!-- ---------- Formato y sala (asignación automática) ---------- -->
+      <fieldset class="funcion-form__grupo funcion-form__grupo--simple">
+        <legend>Formato y sala</legend>
+
+        <div class="campo">
+          <span id="fun-formato-titulo" class="funcion-form__etiqueta">Formato</span>
+          <div class="formatos" role="radiogroup" aria-labelledby="fun-formato-titulo">
+            @for (f of formatos(); track f.formato) {
+              <button type="button" role="radio" class="formato"
+                      [class.activo]="campos.formato.value === f.formato"
+                      [attr.aria-checked]="campos.formato.value === f.formato"
+                      [disabled]="f.salas === 0 || (conEntradas() && f.formato !== formatoActual())"
+                      [title]="descripcionFormato[f.formato]"
+                      (click)="elegirFormato(f.formato)">
+                <strong>{{ f.formato }}</strong>
+                <small>{{ f.salas === 0 ? 'Sin salas' : f.salas + (f.salas === 1 ? ' sala' : ' salas') }}</small>
+              </button>
+            }
+          </div>
+          @if (campos.formato.touched && campos.formato.invalid) {
+            <p class="campo__error">Elegí el formato.</p>
+          } @else if (conEntradas()) {
+            <p class="texto-secundario funcion-form__ayuda">
+              Ya tiene entradas vendidas: se queda en su sala y no puede cambiar de formato.
+            </p>
+          } @else if (campos.formato.value) {
+            <p class="texto-secundario funcion-form__ayuda">{{ descripcionFormato[campos.formato.value] }}</p>
+          }
+        </div>
+
+        <p class="funcion-form__auto">
+          🎯 La sala la asigna el sistema automáticamente: entre las salas {{ campos.formato.value ?? '' }},
+          la de menor número que esté libre en ese horario. Nunca puede haber dos funciones en la misma sala al mismo tiempo.
+        </p>
+
+        @if (plan().length === 0) {
+          <p class="texto-secundario">Elegí película, formato, fecha{{ campos.repetir.value ? 's, días' : '' }} y hora para ver la asignación.</p>
+        } @else {
+          <p class="texto-secundario" aria-live="polite">
+            @if (verificando()) {
+              Verificando disponibilidad…
+            } @else {
+              {{ conSala() }} de {{ plan().length }} {{ plan().length === 1 ? 'fecha' : 'fechas' }} con sala libre
+              @if (sinSala() > 0) { · {{ sinSala() }} sin sala }
+              @if (noDisponibles() > 0) { · {{ noDisponibles() }} con la película no disponible }
+            }
+          </p>
+
+          <ul class="plan">
+            @for (p of plan(); track p.dia) {
+              <li class="plan__fila" [attr.data-estado]="p.estado">
+                <span class="plan__fecha">{{ p.inicio | date: "EEE d/MM · HH:mm" }}</span>
+                <span class="plan__sala">
+                  @switch (p.estado) {
+                    @case ('ok') { Sala {{ p.sala!.numero }} <small>{{ p.sala!.formato }}</small> }
+                    @case ('sin_sala') { Sin sala {{ campos.formato.value }} libre }
+                    @case ('no_disponible') { No disponible }
+                  }
+                </span>
+                <span class="plan__detalle">{{ p.detalle }}</span>
+              </li>
+            }
+          </ul>
+          <p class="texto-secundario funcion-form__ayuda">
+            Es una vista previa: al guardar, la base confirma la sala. Las fechas sin sala libre o con la película
+            no disponible se omiten.
+          </p>
+        }
+      </fieldset>
+
+      <!-- ---------- Idioma y precio ---------- -->
+      <fieldset class="funcion-form__grupo">
+        <legend>Idioma y precio</legend>
+
+        <div class="campo">
+          <label for="fun-idioma">Idioma</label>
+          <select id="fun-idioma" formControlName="idioma"
+                  [attr.aria-invalid]="campos.idioma.touched && campos.idioma.invalid">
+            @for (idioma of idiomas(); track idioma) {
+              <option [value]="idioma">{{ etiquetaIdioma(idioma) }}</option>
+            }
+          </select>
+          @if (campos.idioma.touched && campos.idioma.invalid) {
+            <p class="campo__error">Elegí el idioma.</p>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="fun-precio">Precio base de la entrada ($)</label>
+          <input id="fun-precio" type="number" inputmode="decimal" min="1" step="0.01" formControlName="precio_base"
+                 [attr.aria-invalid]="campos.precio_base.touched && campos.precio_base.invalid" />
+          @if (campos.precio_base.touched && campos.precio_base.invalid) {
+            <p class="campo__error">
+              @if (campos.precio_base.hasError('required')) { Ingresá el precio. }
+              @else { El precio tiene que ser mayor a 0. }
+            </p>
+          } @else if (precioSugerido(); as sugerido) {
+            <p class="texto-secundario funcion-form__ayuda">
+              Precio de la película{{ esPreventa() ? ' en preventa' : '' }}:
+              {{ sugerido | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}
+            </p>
+          }
+        </div>
+      </fieldset>
+
+      @if (mensajeError(); as mensaje) {
+        <app-alerta titulo="No pudimos guardar" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+      }
+
+      <button type="submit" class="boton boton--primario" [disabled]="enviando()">
+        @if (enviando()) {
+          Guardando…
+        } @else if (esEdicion()) {
+          Guardar cambios
+        } @else if (aProgramar().length > 1) {
+          Programar {{ aProgramar().length }} funciones
+        } @else {
+          Programar función
+        }
+      </button>
+    </form>
+  }
+</section>

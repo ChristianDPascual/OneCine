@@ -1,0 +1,53 @@
+.admin-login {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem 1rem;
+  background: radial-gradient(circle at top, #2a0d0d 0%, var(--cinema-black) 60%);
+}
+
+.admin-login__tarjeta {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: clamp(1.75rem, 6vw, 2.5rem);
+  border: 1px solid #2a2a30;
+  border-radius: 18px;
+  background: var(--cinema-surface);
+}
+
+.admin-login__logo {
+  height: 40px;
+  width: auto;
+  margin-bottom: 0.5rem;
+}
+
+.admin-login__etiqueta {
+  color: var(--one-red);
+}
+
+.admin-login__titulo {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-login__form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.admin-login__volver {
+  margin-top: 0.75rem;
+  color: var(--cinema-muted);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.admin-login__volver:hover,
+.admin-login__volver:focus-visible {
+  color: var(--cinema-white);
+}

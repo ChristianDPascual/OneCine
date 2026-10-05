@@ -1,0 +1,27 @@
+<dialog
+  #dialogo
+  class="confirmacion"
+  aria-labelledby="confirmacion-titulo"
+  aria-describedby="confirmacion-mensaje"
+  (close)="respuesta.emit(dialogo.returnValue === 'si')"
+  (click)="cerrarSiClicFuera($event)"
+>
+  <div class="confirmacion__contenido">
+    <svg class="confirmacion__icono" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3 2 21h20L12 3Z" />
+      <path d="M12 10v5M12 18h.01" />
+    </svg>
+
+    <h2 id="confirmacion-titulo" class="confirmacion__titulo">{{ titulo() }}</h2>
+    <p id="confirmacion-mensaje" class="confirmacion__mensaje">{{ mensaje() }}</p>
+
+    <div class="confirmacion__botones">
+      <button type="button" class="boton boton--primario" autofocus (click)="dialogo.close('no')">
+        {{ textoCancelar() }}
+      </button>
+      <button type="button" class="boton boton--secundario" (click)="dialogo.close('si')">
+        {{ textoConfirmar() }}
+      </button>
+    </div>
+  </div>
+</dialog>

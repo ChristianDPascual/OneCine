@@ -1,0 +1,6 @@
+@for (relleno of rellenos(); track $index) {
+  <span class="estrella" aria-hidden="true">
+    <span class="estrella__vacia">★</span>
+    <span class="estrella__llena" [style.width.%]="relleno">★</span>
+  </span>
+}

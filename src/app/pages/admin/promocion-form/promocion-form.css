@@ -1,0 +1,129 @@
+.promo-form {
+  width: min(680px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.promo-form__encabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.promo-form__encabezado .etiqueta-cine {
+  color: var(--one-red);
+}
+
+.promo-form__aviso {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2rem 1.5rem;
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+  text-align: center;
+}
+
+.promo-form__form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.promo-form__grupo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: start;
+  gap: 1.1rem;
+  margin: 0;
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+}
+
+.promo-form__grupo legend {
+  padding: 0 0.5rem;
+  font-family: var(--font-title);
+  font-weight: 600;
+}
+
+.promo-form__completo {
+  grid-column: 1 / -1;
+}
+
+.promo-form__opcional {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.promo-form__interruptor {
+  align-self: center;
+  margin-top: 1.4rem;
+}
+
+.interruptor {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.interruptor input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.interruptor__control {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: #3a3a42;
+  transition: background 0.2s;
+}
+
+.interruptor__control::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--cinema-white);
+  transition: transform 0.2s;
+}
+
+.interruptor input:checked + .interruptor__control {
+  background: var(--one-red);
+}
+
+.interruptor input:checked + .interruptor__control::after {
+  transform: translateX(20px);
+}
+
+.interruptor input:focus-visible + .interruptor__control {
+  outline: 2px solid var(--cinema-white);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .promo-form__grupo {
+    grid-template-columns: 1fr;
+  }
+
+  .promo-form__interruptor {
+    margin-top: 0;
+  }
+}

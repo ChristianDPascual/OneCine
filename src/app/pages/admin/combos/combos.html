@@ -1,0 +1,116 @@
+<section class="admin-seccion">
+  <div class="combos__encabezado">
+    <div>
+      <span class="etiqueta-cine">Panel</span>
+      <h1 class="titulo-seccion">Combos</h1>
+    </div>
+    <a routerLink="/admin/combos/nuevo" class="combos__nuevo">+ Nuevo combo</a>
+  </div>
+
+  @if (mensajeExito(); as mensaje) {
+    <app-alerta tipo="exito" titulo="Listo" [mensaje]="mensaje" (cerrar)="mensajeExito.set(null)" />
+  }
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+
+  <!-- ---------- Buscador + filtros ---------- -->
+  <div class="filtros-admin">
+    <div class="filtros-admin__superior">
+      <div class="filtros-admin__buscador">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+        <input #buscar type="search" placeholder="Buscar por nombre..." aria-label="Buscar combos por nombre"
+               [value]="busqueda()" (input)="busqueda.set(buscar.value)" />
+      </div>
+
+      <div class="filtros-admin__resumen" aria-live="polite">
+        <span class="texto-secundario">{{ filtrados().length }} de {{ combos().length }} combos</span>
+        @if (cantidadFiltros() > 0) {
+          <button type="button" class="filtros-admin__borrar" (click)="borrarFiltros()">
+            Borrar filtros ({{ cantidadFiltros() }})
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="filtros-admin__fila">
+      <div class="filtros-admin__grupo" role="group" aria-labelledby="filtro-estado">
+        <span id="filtro-estado" class="filtros-admin__titulo">Estado</span>
+        <div class="filtros-admin__chips">
+          @for (opcion of opcionesEstado; track opcion.valor) {
+            <button type="button" class="filtro-chip"
+                    [class.filtro-chip--activo]="estado() === opcion.valor"
+                    [attr.aria-pressed]="estado() === opcion.valor"
+                    (click)="elegirEstado(opcion.valor)">
+              {{ opcion.etiqueta }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filtros-admin__grupo" role="group" aria-labelledby="filtro-otros">
+        <span id="filtro-otros" class="filtros-admin__titulo">Mostrar solo</span>
+        <div class="filtros-admin__chips">
+          <button type="button" class="filtro-chip"
+                  [class.filtro-chip--activo]="soloDestacados()" [attr.aria-pressed]="soloDestacados()"
+                  (click)="soloDestacados.set(!soloDestacados())">
+            Destacados
+          </button>
+          <button type="button" class="filtro-chip"
+                  [class.filtro-chip--activo]="soloConEntrada()" [attr.aria-pressed]="soloConEntrada()"
+                  (click)="soloConEntrada.set(!soloConEntrada())">
+            Con entrada
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- Tarjetas ---------- -->
+  <div class="combos__grilla">
+    @for (combo of filtrados(); track combo.id) {
+      <article class="combo" [class.combo--inactivo]="!combo.activo" [class.combo--destacado]="combo.destacado">
+        <div class="combo__imagen">
+          @if (combo.imagen_url) {
+            <img [src]="combo.imagen_url" [alt]="combo.nombre" loading="lazy" />
+          } @else {
+            <span>Sin imagen</span>
+          }
+          <div class="combo__badges">
+            @if (combo.destacado) { <span class="badge badge--dorado">★ Destacado</span> }
+            @if (combo.incluye_entrada) { <span class="badge badge--rojo">Incluye entrada</span> }
+            @if (!combo.activo) { <span class="badge badge--gris">Inactivo</span> }
+          </div>
+        </div>
+
+        <div class="combo__info">
+          <h2 class="titulo-pelicula">{{ combo.nombre }}</h2>
+          <p class="combo__contenido">
+            @if (combo.incluye_entrada) { 1× Entrada · }{{ contenido(combo) }}
+          </p>
+
+          <div class="combo__precios">
+            <span class="combo__precio">{{ combo.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+            @if (ahorroCalculable(combo) && ahorro(combo) > 0) {
+              <span class="combo__ahorro">Ahorrás {{ ahorro(combo) | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</span>
+            }
+          </div>
+
+          <div class="combo__acciones">
+            <a class="combo__accion" [routerLink]="['/admin/combos', combo.id, 'editar']">Editar</a>
+            <button type="button" class="combo__accion" (click)="alternarDestacado(combo)">
+              {{ combo.destacado ? 'Quitar destacado' : 'Destacar' }}
+            </button>
+            <button type="button" class="combo__accion combo__accion--completo" (click)="alternarActivo(combo)">
+              {{ combo.activo ? 'Desactivar' : 'Activar' }}
+            </button>
+          </div>
+        </div>
+      </article>
+    } @empty {
+      <p class="texto-secundario combos__vacio">
+        {{ cantidadFiltros() > 0 ? 'Ningún combo coincide con los filtros.' : 'Todavía no hay combos cargados.' }}
+      </p>
+    }
+  </div>
+</section>

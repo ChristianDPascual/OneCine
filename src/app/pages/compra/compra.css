@@ -1,0 +1,841 @@
+.compra {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: clamp(1.25rem, 4vw, 2rem) clamp(1rem, 4vw, 2rem) 3rem;
+}
+
+.compra__aviso-grande {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1.5rem;
+  border: 1px dashed #3a3a42;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.compra__boton-auto {
+  width: auto;
+  padding-inline: 1.6rem;
+  text-decoration: none;
+}
+
+.compra__nota {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ---------- Encabezado ---------- */
+
+.resumen-funcion {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem 1.25rem;
+  padding: 1rem;
+  border: 1px solid #2a2a30;
+  border-radius: 16px;
+  background: var(--cinema-surface);
+}
+
+.resumen-funcion__poster {
+  width: 64px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.resumen-funcion__datos .etiqueta-cine {
+  color: var(--one-red);
+}
+
+.resumen-funcion__titulo {
+  margin: 0.1rem 0 0.25rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.resumen-funcion__datos p {
+  margin: 0;
+  font-size: 0.88rem;
+  text-transform: capitalize;
+}
+
+.reloj {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--cinema-gold, #d4af37);
+  border-radius: 12px;
+  color: var(--cinema-gold, #d4af37);
+  text-align: center;
+}
+
+.reloj span {
+  font-size: 0.7rem;
+}
+
+.reloj strong {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.9rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.reloj--urgente {
+  border-color: #f87171;
+  color: #f87171;
+  animation: latido 1s infinite;
+}
+
+@keyframes latido {
+  50% { opacity: 0.6; }
+}
+
+/* ---------- Pasos ---------- */
+
+.pasos {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.pasos li {
+  flex: 1;
+  min-width: max-content;
+  padding: 0.55rem 1rem;
+  border-bottom: 3px solid #2a2a30;
+  color: var(--cinema-muted);
+  font-family: var(--font-title);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.pasos li.hecho {
+  border-color: rgb(215 25 32 / 0.45);
+  color: var(--cinema-white);
+}
+
+.pasos li.activo {
+  border-color: var(--one-red);
+  color: var(--cinema-white);
+}
+
+/* ---------- Aviso (butaca reservada, etc.) ---------- */
+
+.aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgb(250 204 21 / 0.4);
+  border-radius: 12px;
+  background: rgb(250 204 21 / 0.1);
+  color: #facc15;
+  font-weight: 500;
+}
+
+.aviso button {
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* ---------- Cuerpo: principal + resumen ---------- */
+
+.compra__cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.compra__principal {
+  min-width: 0;
+}
+
+/* ---------- Mapa de butacas ---------- */
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mapa {
+  padding: 1.5rem 1rem;
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+  overflow-x: auto;
+}
+
+.mapa__contenido {
+  width: max-content;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mapa__pantalla {
+  margin: 0 3rem 1.5rem;
+  padding: 0.35rem;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  border-top: 4px solid var(--cinema-white);
+  color: var(--cinema-muted);
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.3em;
+  text-align: center;
+  box-shadow: 0 -12px 24px -12px rgb(255 255 255 / 0.35);
+}
+
+.mapa__fila {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mapa__letra {
+  width: 1.2rem;
+  color: var(--cinema-muted);
+  font-family: 'Bebas Neue', sans-serif;
+  text-align: center;
+}
+
+.mapa__bloque {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.butaca {
+  width: 1.55rem;
+  height: 1.45rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px 6px 3px 3px;
+  background: #4a4a54;
+  color: rgb(255 255 255 / 0.8);
+  font: 600 0.6rem var(--font-title);
+  font-style: normal;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.butaca[data-estado='libre']:hover,
+.butaca[data-estado='libre']:focus-visible,
+.butaca[data-estado='mia']:hover {
+  transform: translateY(-2px);
+}
+
+.butaca[data-estado='libre'][data-tipo='vip'] {
+  background: var(--cinema-gold, #d4af37);
+  color: #1a1a1a;
+}
+
+.butaca[data-estado='libre'][data-tipo='accesible'] {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.butaca[data-estado='mia'] {
+  background: var(--one-red);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.85);
+}
+
+.butaca[data-estado='reservada'] {
+  background: repeating-linear-gradient(135deg, #3a3a42 0 3px, #26262d 3px 6px);
+  color: transparent;
+  cursor: not-allowed;
+}
+
+.butaca[data-estado='vendida'] {
+  background: #1f1f24;
+  color: transparent;
+  cursor: not-allowed;
+}
+
+.butaca[data-estado='procesando'] {
+  background: var(--one-red);
+  opacity: 0.5;
+  animation: latido 0.8s infinite;
+  cursor: progress;
+}
+
+.butaca--vacia {
+  background: none;
+  cursor: default;
+}
+
+.butaca--muestra {
+  width: 1rem;
+  height: 0.95rem;
+  cursor: default;
+}
+
+/* ---------- Candy ---------- */
+
+.candy-paso,
+.pago {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.candy-paso p {
+  margin: 0;
+}
+
+.candy-paso__titulo {
+  margin: 0.75rem 0 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.candy-paso__nota {
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  background: rgb(215 25 32 / 0.1);
+  color: #fca5a5;
+  font-size: 0.82rem;
+}
+
+.candy-paso__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-auto-rows: 1fr; /* todas las tarjetas de una fila con la misma altura */
+  gap: 1rem;
+}
+
+
+/* Tarjeta vertical: imagen arriba, nombre completo, precio y contador abajo */
+.item {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.item:hover {
+  transform: translateY(-2px);
+}
+
+.item--elegido {
+  border-color: var(--one-red);
+  box-shadow: 0 0 0 1px var(--one-red);
+}
+
+.item__imagen {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  font-size: 2.5rem;
+}
+
+.item__imagen img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  object-fit: contain;
+}
+
+.item__etiqueta {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--one-red);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.item__cantidad {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  min-width: 2rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: var(--one-red);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.item__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.8rem 0.9rem 0.9rem;
+}
+
+.item__nombre {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.item__detalle {
+  margin: 0;
+  color: var(--cinema-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.item__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.item__precio {
+  color: var(--cinema-gold, #d4af37);
+  font-family: var(--font-title);
+  font-size: 1.05rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.contador {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.contador button {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid #3a3a42;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cinema-white);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.contador button:hover:not(:disabled) {
+  border-color: var(--one-red);
+  background: var(--one-red);
+  color: #fff;
+}
+
+.contador button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.contador span {
+  min-width: 1.2rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .candy-paso__lista,
+  .candy-paso__lista--combos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .item__info {
+    padding: 0.65rem;
+  }
+
+  .item__pie {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .contador {
+    justify-content: space-between;
+  }
+}
+
+/* ---------- Pago ---------- */
+
+.metodos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.6rem;
+}
+
+.metodo {
+  padding: 1rem;
+  border: 1px solid #3a3a42;
+  border-radius: 12px;
+  background: var(--cinema-surface);
+  color: var(--cinema-white);
+  font: 600 0.92rem var(--font-title);
+  cursor: pointer;
+}
+
+.metodo.activo {
+  border-color: var(--one-red);
+  background: rgb(215 25 32 / 0.12);
+}
+
+.pago__boton {
+  margin-top: 0.75rem;
+}
+
+/* ---------- Listo ---------- */
+
+.listo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2.5rem 1.5rem;
+  border: 1px solid #2a2a30;
+  border-radius: 16px;
+  background: var(--cinema-surface);
+  text-align: center;
+}
+
+.listo p {
+  margin: 0;
+}
+
+.listo__icono {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(74 222 128 / 0.15);
+  color: #4ade80;
+  font-size: 1.8rem;
+}
+
+.listo__codigo {
+  padding: 0.6rem 1.4rem;
+  border: 2px dashed var(--cinema-gold, #d4af37);
+  border-radius: 12px;
+  color: var(--cinema-gold, #d4af37);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  letter-spacing: 0.15em;
+}
+
+.listo__botones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+/* ---------- Resumen lateral ---------- */
+
+.resumen {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.1rem;
+  border: 1px solid #2a2a30;
+  border-radius: 16px;
+  background: var(--cinema-surface);
+}
+
+.resumen h2 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 1.05rem;
+}
+
+.resumen p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.resumen__butacas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.resumen__butacas li {
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: var(--one-red);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.resumen__butacas li[data-tipo='vip'] {
+  background: var(--cinema-gold, #d4af37);
+  color: #111;
+}
+
+.resumen__butacas small {
+  margin-left: 0.25rem;
+  font-size: 0.62rem;
+}
+
+.resumen__lineas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.resumen__lineas div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.resumen__lineas dd {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.resumen__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 0.75rem;
+  border-top: 1px solid #2a2a30;
+}
+
+.resumen__total strong {
+  color: var(--cinema-gold, #d4af37);
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+}
+
+.resumen__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.compra__secundario {
+  padding: 0.6rem;
+  border: 1px solid #3a3a42;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cinema-white);
+  font: 600 0.85rem var(--font-title);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.compra__secundario:hover {
+  border-color: var(--one-red);
+  color: var(--one-red);
+}
+
+.compra__cancelar {
+  border: 0;
+  background: none;
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  .compra__cuerpo {
+    grid-template-columns: 1fr;
+  }
+
+  .resumen {
+    position: sticky;
+    top: auto;
+    bottom: 0;
+    z-index: 5;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -12px 30px rgb(0 0 0 / 0.6);
+  }
+}
+
+@media (max-width: 600px) {
+  .resumen-funcion {
+    grid-template-columns: auto 1fr;
+  }
+
+  .reloj {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+
+  .mapa__fila {
+    gap: 0.6rem;
+  }
+
+  .butaca {
+    width: 1.3rem;
+    height: 1.2rem;
+    font-size: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reloj--urgente,
+  .butaca[data-estado='procesando'] {
+    animation: none;
+  }
+}
+
+/* ---------- Tickets con QR (pantalla final) ---------- */
+
+.tickets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.25rem;
+  margin: 0.75rem 0;
+}
+
+.ticket {
+  width: min(260px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1.1rem;
+  border: 1px solid #2a2a30;
+  border-top: 4px solid var(--one-red);
+  border-radius: 16px;
+  background: #121216;
+}
+
+.ticket--candy {
+  border-top-color: var(--cinema-gold, #d4af37);
+}
+
+.ticket__tipo {
+  font-family: var(--font-title);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.ticket__detalle {
+  color: var(--cinema-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-transform: capitalize;
+}
+
+.ticket__butacas,
+.ticket__productos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticket__butacas li {
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  background: var(--one-red);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.ticket__butacas li[data-tipo='vip'] {
+  background: var(--cinema-gold, #d4af37);
+  color: #111;
+}
+
+.ticket__productos {
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.compra__cuerpo--completo {
+  grid-template-columns: 1fr;
+}
+
+/* ---------- Descuento de primera compra ---------- */
+
+.resumen__regalo {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgb(74 222 128 / 0.35);
+  border-radius: 10px;
+  background: rgb(74 222 128 / 0.1);
+  color: #4ade80;
+  font-size: 0.82rem !important;
+  font-weight: 600;
+}
+
+.resumen__descuento {
+  padding-top: 0.6rem;
+  border-top: 1px dashed #2a2a30;
+}
+
+.resumen__descuento div:last-child {
+  color: #4ade80;
+  font-weight: 600;
+}

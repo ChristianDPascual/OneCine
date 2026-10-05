@@ -1,0 +1,69 @@
+<dialog #dialogo class="panel-lateral" aria-labelledby="perfil-titulo" (close)="cerrar.emit()"
+    (click)="cerrarSiClicFuera($event)">
+    <div class="panel-lateral__contenido">
+        <header class="panel-lateral__encabezado">
+            <span>Perfil</span>
+            <button type="button" class="panel-lateral__cerrar" aria-label="Cerrar perfil" (click)="cerrarPanel()">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+        </header>
+
+        <h2 id="perfil-titulo" class="etiqueta-cine perfil__saludo">
+            Hola{{ nombre() ? ', ' + nombre() : '' }}
+        </h2>
+
+        <nav aria-label="Mi cuenta">
+            <ul class="perfil__menu">
+                <li>
+                    <a routerLink="/mis-entradas" (click)="cerrarPanel()">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4Z" />
+                            <path d="M14 6v12" stroke-dasharray="2 2" />
+                        </svg>
+                        Mis entradas
+                    </a>
+                </li>
+                <li>
+                    <a routerLink="/mis-puntos" (click)="cerrarPanel()">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z" />
+                        </svg>
+                        Mis puntos
+                    </a>
+                </li>
+                <li>
+                    <a routerLink="/mis-peliculas" (click)="cerrarPanel()">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="16" rx="2" />
+                            <path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" />
+                        </svg>
+                        Mis películas
+                    </a>
+                </li>
+                @if (mostrarCredito()) {
+                <li>
+                    <a routerLink="/mi-credito" (click)="cerrarPanel()">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M3 7a2 2 0 0 1 2-2h13v4" />
+                            <path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2Z" />
+                            <circle cx="16" cy="14.5" r="1.2" />
+                        </svg>
+                        Mi crédito
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+
+        <button type="button" class="perfil__salir" [disabled]="cerrandoSesion()" (click)="cerrarSesion()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="m16 17 5-5-5-5M21 12H9" />
+            </svg>
+            {{ cerrandoSesion() ? 'Cerrando sesión…' : 'Cerrar sesión' }}
+        </button>
+    </div>
+</dialog>

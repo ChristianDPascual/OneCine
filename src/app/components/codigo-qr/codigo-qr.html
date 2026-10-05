@@ -1,0 +1,5 @@
+@if (imagen(); as src) {
+  <img [src]="src" [alt]="descripcion()" [width]="tamano()" [height]="tamano()" />
+} @else {
+  <span class="cargando" [style.width.px]="tamano()" [style.height.px]="tamano()" aria-hidden="true"></span>
+}

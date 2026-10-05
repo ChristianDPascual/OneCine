@@ -1,0 +1,59 @@
+.empleado-nuevo {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.empleado-nuevo__encabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.empleado-nuevo__encabezado .etiqueta-cine {
+  color: var(--one-red);
+}
+
+.empleado-nuevo__form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.empleado-nuevo__grupo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.1rem;
+  margin: 0;
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+}
+
+.empleado-nuevo__grupo legend {
+  padding: 0 0.5rem;
+  font-family: var(--font-title);
+  font-weight: 600;
+}
+
+.empleado-nuevo__acciones {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1rem;
+}
+
+.empleado-nuevo__acciones .boton--primario {
+  margin-top: 0;
+}
+
+@media (max-width: 600px) {
+  .empleado-nuevo__grupo,
+  .empleado-nuevo__acciones {
+    grid-template-columns: 1fr;
+  }
+}

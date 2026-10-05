@@ -1,0 +1,153 @@
+<section class="admin-seccion actividad">
+  <header class="actividad__encabezado">
+    <span class="etiqueta-cine">Panel</span>
+    <h1 class="titulo-seccion">Log de actividad</h1>
+    <p class="texto-secundario">Cada alta, modificación y baja que registra la base, de la más reciente a la más antigua.</p>
+  </header>
+
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+
+  <!-- ---------- Filtros ---------- -->
+  <form class="actividad__filtros" (submit)="$event.preventDefault()">
+    <div class="campo">
+      <label for="log-tabla">Sección</label>
+      <select id="log-tabla" [value]="filtros().tabla ?? ''" (change)="cambiarFiltro('tabla', $event)">
+        <option value="">Todas</option>
+        @for (tabla of tablas(); track tabla) {
+          <option [value]="tabla">{{ etiquetaTabla(tabla) }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="log-accion">Acción</label>
+      <select id="log-accion" [value]="filtros().accion ?? ''" (change)="cambiarFiltro('accion', $event)">
+        <option value="">Todas</option>
+        @for (accion of acciones(); track accion) {
+          <option [value]="accion">{{ etiquetaAccion(accion) }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="log-usuario">Usuario</label>
+      <select id="log-usuario" [value]="filtros().usuario ?? ''" (change)="cambiarFiltro('usuario', $event)">
+        <option value="">Todos</option>
+        <option value="sistema">Sistema (sin usuario)</option>
+        @for (empleado of empleados(); track empleado.id) {
+          <option [value]="empleado.id">{{ empleado.nombre }} {{ empleado.apellido }} · {{ empleado.puesto | puesto }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo actividad__fecha">
+      <label for="log-desde">Desde</label>
+      <app-campo-fecha inputId="log-desde" [formControl]="desde" />
+    </div>
+
+    <div class="campo actividad__fecha">
+      <label for="log-hasta">Hasta</label>
+      <app-campo-fecha inputId="log-hasta" [formControl]="hasta" />
+      @if (rangoInvalido()) {
+        <p class="campo__error">"Hasta" no puede ser anterior a "Desde".</p>
+      }
+    </div>
+  </form>
+
+  <div class="actividad__resumen" aria-live="polite">
+    <span class="texto-secundario">
+      @if (total() > 0) {
+        {{ primeraFila() }}–{{ ultimaFila() }} de {{ total() }} movimientos
+      } @else if (!cargando()) {
+        Sin movimientos
+      }
+    </span>
+    @if (cantidadFiltros() > 0) {
+      <button type="button" class="actividad__borrar" (click)="borrarFiltros()">
+        Borrar filtros ({{ cantidadFiltros() }})
+      </button>
+    }
+  </div>
+
+  <!-- ---------- Movimientos ---------- -->
+  <ol class="actividad__lista">
+    @for (log of filas(); track log.id) {
+      @let quien = usuario(log);
+      @let abierta = abiertas().has(log.id);
+
+      <li class="movimiento" [class.movimiento--abierto]="abierta">
+        <button type="button" class="movimiento__fila" [attr.aria-expanded]="abierta"
+                [attr.aria-controls]="'log-detalle-' + log.id" (click)="alternarDetalle(log.id)">
+          <span class="movimiento__accion" [attr.data-tipo]="tipoAccion(log.accion)">{{ etiquetaAccion(log.accion) }}</span>
+
+          <span class="movimiento__que">
+            <strong>{{ etiquetaTabla(log.tabla) }}</strong>
+            @if (log.registro_id) {
+              <span class="texto-secundario"> #{{ log.registro_id }}</span>
+            }
+          </span>
+
+          <span class="movimiento__quien">
+            {{ quien.nombre }}
+            @if (quien.empleado; as empleado) {
+              <small>{{ empleado.puesto | puesto }}</small>
+            } @else if (quien.esCliente) {
+              <small>Cliente</small>
+            }
+          </span>
+
+          <time class="movimiento__cuando" [attr.datetime]="log.created_at">
+            {{ log.created_at | date: 'dd/MM/yy HH:mm:ss' }}
+          </time>
+
+          <svg class="movimiento__flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </button>
+
+        @if (abierta) {
+          <div class="movimiento__detalle" [id]="'log-detalle-' + log.id">
+            @let lista = cambios(log);
+            @if (lista.length === 0) {
+              <p class="texto-secundario">No hubo cambios en los datos.</p>
+            } @else {
+              <table class="cambios">
+                <thead>
+                  <tr>
+                    <th scope="col">Campo</th>
+                    @if (log.antes) { <th scope="col">Antes</th> }
+                    @if (log.despues) { <th scope="col">Después</th> }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (cambio of lista; track cambio.campo) {
+                    <tr>
+                      <th scope="row">{{ cambio.campo }}</th>
+                      @if (log.antes) { <td class="cambios__antes">{{ formatear(cambio.antes) }}</td> }
+                      @if (log.despues) { <td class="cambios__despues">{{ formatear(cambio.despues) }}</td> }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        }
+      </li>
+    } @empty {
+      @if (!cargando()) {
+        <li class="actividad__vacio texto-secundario">
+          {{ cantidadFiltros() > 0 ? 'No hay movimientos con esos filtros.' : 'Todavía no hay movimientos registrados.' }}
+        </li>
+      }
+    }
+  </ol>
+
+  <!-- ---------- Paginación ---------- -->
+  @if (totalPaginas() > 1) {
+    <nav class="paginacion" aria-label="Páginas del log">
+      <button type="button" (click)="irAPagina(pagina() - 1)" [disabled]="pagina() === 1">‹ Anterior</button>
+      <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+      <button type="button" (click)="irAPagina(pagina() + 1)" [disabled]="pagina() === totalPaginas()">Siguiente ›</button>
+    </nav>
+  }
+</section>

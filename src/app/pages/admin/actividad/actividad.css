@@ -1,0 +1,213 @@
+.actividad__encabezado {
+  margin-bottom: 1.5rem;
+}
+
+.actividad__filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem 1rem;
+  padding: 1rem;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 1rem;
+  background: var(--cinema-surface, #16161a);
+}
+
+.actividad__filtros .campo {
+  margin: 0;
+}
+
+.actividad__resumen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.5rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.actividad__borrar {
+  border: 0;
+  background: none;
+  color: var(--cinema-red, #d71920);
+  font: 600 0.85rem 'Montserrat', sans-serif;
+  cursor: pointer;
+}
+
+.actividad__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.actividad__vacio {
+  padding: 2rem;
+  text-align: center;
+}
+
+/* ---------- Movimiento ---------- */
+
+.movimiento {
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 0.8rem;
+  background: var(--cinema-surface, #16161a);
+  overflow: hidden;
+}
+
+.movimiento--abierto {
+  border-color: rgb(255 255 255 / 0.18);
+}
+
+.movimiento__fila {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1.2fr) minmax(0, 1fr) auto 1.25rem;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.movimiento__fila:hover {
+  background: rgb(255 255 255 / 0.03);
+}
+
+.movimiento__accion {
+  justify-self: start;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.movimiento__accion[data-tipo='alta'] { background: rgb(74 222 128 / 0.15); color: #4ade80; }
+.movimiento__accion[data-tipo='modificacion'] { background: rgb(250 204 21 / 0.15); color: #facc15; }
+.movimiento__accion[data-tipo='baja'] { background: rgb(248 113 113 / 0.15); color: #f87171; }
+
+.movimiento__que,
+.movimiento__quien {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movimiento__quien small {
+  margin-left: 0.4rem;
+  color: var(--cinema-muted);
+}
+
+.movimiento__cuando {
+  color: var(--cinema-muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.movimiento__flecha {
+  width: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  transition: transform 0.2s;
+}
+
+.movimiento--abierto .movimiento__flecha {
+  transform: rotate(180deg);
+}
+
+.movimiento__detalle {
+  padding: 0 1rem 1rem;
+  overflow-x: auto;
+}
+
+/* ---------- Tabla de cambios ---------- */
+
+.cambios {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.cambios th,
+.cambios td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+  text-align: left;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.cambios thead th {
+  color: var(--cinema-muted);
+  font-weight: 500;
+}
+
+.cambios tbody th {
+  font-family: monospace;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.cambios__antes { color: #f87171; }
+.cambios__despues { color: #4ade80; }
+
+/* ---------- Paginación ---------- */
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.paginacion button {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font: 600 0.85rem 'Montserrat', sans-serif;
+  cursor: pointer;
+}
+
+.paginacion button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 760px) {
+  .movimiento__fila {
+    grid-template-columns: auto minmax(0, 1fr) 1.25rem;
+    grid-template-areas:
+      'accion que flecha'
+      'quien quien flecha'
+      'cuando cuando flecha';
+    gap: 0.3rem 0.75rem;
+  }
+
+  .movimiento__accion { grid-area: accion; }
+  .movimiento__que { grid-area: que; }
+  .movimiento__quien { grid-area: quien; }
+  .movimiento__cuando { grid-area: cuando; font-size: 0.8rem; }
+  .movimiento__flecha { grid-area: flecha; }
+}
+
+/* Los campos de fecha (día · mes · año) ocupan dos columnas del filtro */
+.actividad__fecha {
+  grid-column: span 2;
+}
+
+@media (max-width: 560px) {
+  .actividad__fecha {
+    grid-column: 1 / -1;
+  }
+}

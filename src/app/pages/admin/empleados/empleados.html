@@ -1,0 +1,60 @@
+<section class="admin-seccion">
+  <div class="empleados__encabezado">
+    <div>
+      <span class="etiqueta-cine">Panel</span>
+      <h1 class="titulo-seccion">Empleados</h1>
+    </div>
+
+    @if (puedeCrear()) {
+      <a routerLink="/admin/empleados/nuevo" class="empleados__nuevo">+ Nuevo empleado</a>
+    }
+  </div>
+
+  @if (mensajeExito(); as mensaje) {
+    <app-alerta tipo="exito" titulo="Listo" [mensaje]="mensaje" (cerrar)="mensajeExito.set(null)" />
+  }
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+
+  <div class="empleados__tabla-contenedor">
+    <table class="empleados__tabla">
+      <thead>
+        <tr>
+          <th scope="col">Empleado</th>
+          <th scope="col">DNI</th>
+          <th scope="col">Correo</th>
+          <th scope="col">Puesto</th>
+          <th scope="col">Estado</th>
+          <th scope="col"><span class="visualmente-oculto">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (empleado of lista(); track empleado.id) {
+          <tr [class.inactivo]="!empleado.activo">
+            <td data-label="Empleado" class="empleados__nombre">{{ empleado.apellido }}, {{ empleado.nombre }}</td>
+            <td data-label="DNI">{{ empleado.dni }}</td>
+            <td data-label="Correo">{{ empleado.email }}</td>
+            <td data-label="Puesto"><span class="empleados__puesto">{{ empleado.puesto | puesto }}</span></td>
+            <td data-label="Estado">
+              <span class="empleados__estado" [class.empleados__estado--activo]="empleado.activo">
+                {{ empleado.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="empleados__acciones">
+              @if (puedeGestionar(empleado)) {
+                <button type="button" class="empleados__accion" (click)="alternarActivo(empleado)">
+                  {{ empleado.activo ? 'Desactivar' : 'Reactivar' }}
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="empleados__vacio">Todavía no hay empleados cargados.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

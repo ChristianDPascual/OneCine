@@ -1,0 +1,361 @@
+<section class="compra">
+  @if (noDisponible(); as motivo) {
+    <div class="compra__aviso-grande" role="alert">
+      <p class="titulo-pelicula">{{ motivo }}</p>
+      <a routerLink="/cartelera" class="boton boton--primario compra__boton-auto">Ver la cartelera</a>
+    </div>
+  } @else if (datos(); as f) {
+    <!-- ---------- Encabezado: función + reloj de la reserva ---------- -->
+    <header class="resumen-funcion">
+      @if (f.pelicula.imagen_url) {
+        <img class="resumen-funcion__poster" [src]="f.pelicula.imagen_url" [alt]="'Póster de ' + f.pelicula.titulo" />
+      }
+      <div class="resumen-funcion__datos">
+        <span class="etiqueta-cine">Comprar entradas</span>
+        <h1 class="resumen-funcion__titulo">{{ f.pelicula.titulo }}</h1>
+        <p class="texto-secundario">
+          {{ f.inicio | date: "EEEE d 'de' MMMM · HH:mm" }} hs · Sala {{ f.sala.numero }} ({{ f.sala.formato }}) ·
+          {{ f.idioma === 'subtitulada' ? 'Subtitulada' : 'Castellano' }}
+        </p>
+      </div>
+
+      @if (restante() !== null && paso() !== 'listo') {
+        <div class="reloj" [class.reloj--urgente]="restante()! <= 60" role="timer" aria-live="off">
+          <span>Tu reserva vence en</span>
+          <strong>{{ reloj() }}</strong>
+        </div>
+      }
+    </header>
+
+    <!-- ---------- Pasos ---------- -->
+    @if (paso() !== 'listo') {
+      <ol class="pasos">
+        <li [class.activo]="paso() === 'butacas'" [class.hecho]="paso() !== 'butacas'">1 · Butacas</li>
+        <li [class.activo]="paso() === 'candy'" [class.hecho]="paso() === 'pago'">2 · Candy bar</li>
+        <li [class.activo]="paso() === 'pago'">3 · Pago</li>
+      </ol>
+    }
+
+    @if (aviso(); as mensaje) {
+      <div class="aviso" role="alert">
+        <span>{{ mensaje }}</span>
+        <button type="button" aria-label="Cerrar aviso" (click)="aviso.set(null)">✕</button>
+      </div>
+    }
+
+    @if (mensajeError(); as mensaje) {
+      <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+    }
+
+    <div class="compra__cuerpo" [class.compra__cuerpo--completo]="paso() === 'listo'">
+      <div class="compra__principal">
+        @switch (paso()) {
+          @case ('butacas') {
+            <div class="leyenda">
+              <span><i class="butaca butaca--muestra" data-estado="libre"></i> Libre</span>
+              <span><i class="butaca butaca--muestra" data-estado="libre" data-tipo="vip"></i> VIP (+{{ recargo() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }})</span>
+              <span><i class="butaca butaca--muestra" data-estado="libre" data-tipo="accesible"></i> Accesible</span>
+              <span><i class="butaca butaca--muestra" data-estado="mia"></i> Tu selección</span>
+              <span><i class="butaca butaca--muestra" data-estado="reservada"></i> Reservada</span>
+              <span><i class="butaca butaca--muestra" data-estado="vendida"></i> Vendida</span>
+            </div>
+
+            <div class="mapa" role="group" aria-label="Elegí tus butacas">
+              <div class="mapa__contenido">
+                <div class="mapa__pantalla">Pantalla</div>
+                @for (fila of mapa(); track fila.fila) {
+                  <div class="mapa__fila">
+                    <span class="mapa__letra">{{ fila.fila }}</span>
+                    @for (bloque of fila.bloques; track bloque.bloque) {
+                      <div class="mapa__bloque">
+                        @for (butaca of bloque.lugares; track $index) {
+                          @if (butaca) {
+                            @let estado = estadoDe(butaca.id);
+                            <button type="button" class="butaca"
+                                    [attr.data-estado]="estado" [attr.data-tipo]="butaca.tipo"
+                                    [attr.aria-pressed]="estado === 'mia'"
+                                    [attr.aria-label]="etiquetaEstado(butaca)" [title]="etiquetaEstado(butaca)"
+                                    (click)="tocar(butaca)">
+                              {{ butaca.numero }}
+                            </button>
+                          } @else {
+                            <span class="butaca butaca--vacia" aria-hidden="true"></span>
+                          }
+                        }
+                      </div>
+                    }
+                    <span class="mapa__letra">{{ fila.fila }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <p class="texto-secundario compra__nota">
+              Quedan {{ libres() }} butacas libres · Podés elegir hasta {{ maximo }}.
+              Al tocar una butaca queda reservada para vos durante 10 minutos.
+            </p>
+          }
+
+          @case ('candy') {
+            <div class="candy-paso">
+              <p class="texto-secundario">Sumá algo del candy bar o seguí sin agregar nada.</p>
+
+              @if (combosActivos().length > 0) {
+                <h2 class="candy-paso__titulo">Combos</h2>
+                @if (combosConEntrada() > 0) {
+                  <p class="candy-paso__nota">
+                    {{ combosConEntrada() }} de tus {{ mias().length }} entradas {{ combosConEntrada() === 1 ? 'está cubierta' : 'están cubiertas' }} por combos.
+                    Las butacas VIP pagan igual el adicional.
+                  </p>
+                }
+                <div class="candy-paso__lista candy-paso__lista--combos">
+                  @for (combo of combosActivos(); track combo.id) {
+                    @let cant = cantidad('combo', combo.id);
+                    @let bloqueado = combo.incluye_entrada && !puedeSumarComboConEntrada();
+                    <article class="item" [class.item--elegido]="cant > 0">
+                      <div class="item__imagen">
+                        @if (combo.imagen_url) {
+                          <img [src]="combo.imagen_url" [alt]="combo.nombre" loading="lazy" />
+                        } @else {
+                          <span aria-hidden="true">🍿</span>
+                        }
+                        @if (combo.incluye_entrada) {
+                          <span class="item__etiqueta">Incluye entrada</span>
+                        }
+                        @if (cant > 0) {
+                          <span class="item__cantidad">× {{ cant }}</span>
+                        }
+                      </div>
+                      <div class="item__info">
+                        <h3 class="item__nombre">{{ combo.nombre }}</h3>
+                        @if (combo.items.length > 0) {
+                          <p class="item__detalle">
+                            @for (i of combo.items; track i.producto.id; let ultimo = $last) {
+                              {{ i.cantidad }}× {{ i.producto.nombre }}{{ ultimo ? '' : ' · ' }}
+                            }
+                          </p>
+                        }
+                        <div class="item__pie">
+                          <span class="item__precio">{{ combo.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+                          <div class="contador">
+                            <button type="button" [disabled]="cant === 0" (click)="cambiarCantidad('combo', combo.id, -1)"
+                                    [attr.aria-label]="'Quitar ' + combo.nombre">−</button>
+                            <span aria-live="polite">{{ cant }}</span>
+                            <button type="button" [disabled]="bloqueado"
+                                    [title]="bloqueado ? 'Ya tenés un combo con entrada por cada butaca' : ''"
+                                    (click)="cambiarCantidad('combo', combo.id, 1, combo.incluye_entrada)"
+                                    [attr.aria-label]="'Agregar ' + combo.nombre">+</button>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  }
+                </div>
+              }
+
+              @for (seccion of seccionesCandy(); track seccion.titulo) {
+                <h2 class="candy-paso__titulo">{{ seccion.titulo }}</h2>
+                <div class="candy-paso__lista">
+                  @for (producto of seccion.productos; track producto.id) {
+                    @let cant = cantidad('producto', producto.id);
+                    <article class="item" [class.item--elegido]="cant > 0">
+                      <div class="item__imagen">
+                        @if (producto.imagen_url) {
+                          <img [src]="producto.imagen_url" [alt]="producto.nombre" loading="lazy" />
+                        } @else {
+                          <span aria-hidden="true">🥤</span>
+                        }
+                        @if (cant > 0) {
+                          <span class="item__cantidad">× {{ cant }}</span>
+                        }
+                      </div>
+                      <div class="item__info">
+                        <h3 class="item__nombre">{{ producto.nombre }}</h3>
+                        @if (producto.descripcion) {
+                          <p class="item__detalle">{{ producto.descripcion }}</p>
+                        }
+                        <div class="item__pie">
+                          <span class="item__precio">{{ producto.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+                          <div class="contador">
+                            <button type="button" [disabled]="cant === 0" (click)="cambiarCantidad('producto', producto.id, -1)"
+                                    [attr.aria-label]="'Quitar ' + producto.nombre">−</button>
+                            <span aria-live="polite">{{ cant }}</span>
+                            <button type="button" (click)="cambiarCantidad('producto', producto.id, 1)"
+                                    [attr.aria-label]="'Agregar ' + producto.nombre">+</button>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @case ('pago') {
+            <div class="pago">
+              <h2 class="candy-paso__titulo">Medio de pago</h2>
+              <p class="texto-secundario">Pago simulado: no se realiza ningún cobro real.</p>
+
+              <div class="metodos" role="radiogroup" aria-label="Medio de pago">
+                <button type="button" role="radio" class="metodo" [class.activo]="metodoPago() === 'credito'"
+                        [attr.aria-checked]="metodoPago() === 'credito'" (click)="metodoPago.set('credito')">💳 Tarjeta de crédito</button>
+                <button type="button" role="radio" class="metodo" [class.activo]="metodoPago() === 'debito'"
+                        [attr.aria-checked]="metodoPago() === 'debito'" (click)="metodoPago.set('debito')">🏦 Tarjeta de débito</button>
+                <button type="button" role="radio" class="metodo" [class.activo]="metodoPago() === 'mercadopago'"
+                        [attr.aria-checked]="metodoPago() === 'mercadopago'" (click)="metodoPago.set('mercadopago')">📱 Mercado Pago</button>
+              </div>
+
+              <button type="button" class="boton boton--primario pago__boton" [disabled]="pagando()" (click)="pagar()">
+                {{ pagando() ? 'Procesando pago…' : 'Pagar ' + (total() | currency: 'ARS' : 'symbol-narrow' : '1.0-2') }}
+              </button>
+            </div>
+          }
+
+          @case ('listo') {
+            @if (compra(); as c) {
+              <div class="listo">
+                <span class="listo__icono" aria-hidden="true">✓</span>
+                <h2 class="titulo-seccion">¡Compra confirmada!</h2>
+                <p class="texto-secundario">
+                  Guardá estos códigos: también los encontrás en <a routerLink="/mis-entradas">Mis entradas</a>.
+                </p>
+                <p class="listo__codigo">{{ c.codigo }}</p>
+
+                <div class="tickets">
+                  <article class="ticket">
+                    <span class="ticket__tipo">🎬 Entrada a la sala</span>
+                    <app-codigo-qr [valor]="qrSala(c.codigo)" [tamano]="190" descripcion="QR para ingresar a la sala" />
+                    <p class="ticket__detalle">
+                      {{ f.pelicula.titulo }}<br />
+                      {{ f.inicio | date: "EEE d/MM · HH:mm" }} hs · Sala {{ f.sala.numero }}
+                    </p>
+                    <ul class="ticket__butacas">
+                      @for (b of butacasCompradas(); track b.id) {
+                        <li [attr.data-tipo]="b.tipo">{{ b.fila }}{{ b.numero }}</li>
+                      }
+                    </ul>
+                  </article>
+
+                  @if (candyComprado().length > 0) {
+                    <article class="ticket ticket--candy">
+                      <span class="ticket__tipo">🍿 Retiro en el candy bar</span>
+                      <app-codigo-qr [valor]="qrCandy(c.codigo)" [tamano]="190" descripcion="QR para retirar en el candy bar" />
+                      <ul class="ticket__productos">
+                        @for (item of candyComprado(); track item.nombre) {
+                          <li>{{ item.cantidad }}× {{ item.nombre }}</li>
+                        }
+                      </ul>
+                    </article>
+                  }
+                </div>
+
+                @if (c.descuento > 0) {
+                  <p class="texto-secundario">
+                    Subtotal {{ c.subtotal | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }} ·
+                    Descuento primera compra − {{ c.descuento | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}
+                  </p>
+                }
+                <p>Total pagado: <strong>{{ c.total | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong></p>
+                <div class="listo__botones">
+                  <a routerLink="/mis-entradas" class="boton boton--primario compra__boton-auto">Ver mis entradas</a>
+                  <a routerLink="/" class="compra__secundario">Volver al inicio</a>
+                </div>
+              </div>
+            }
+          }
+        }
+      </div>
+
+      <!-- ---------- Resumen lateral ---------- -->
+      @if (paso() !== 'listo') {
+        <aside class="resumen" aria-label="Resumen de la compra">
+          <h2>Tu compra</h2>
+
+          @if (descuento(); as d) {
+            <p class="resumen__regalo">🎁 ¡Es tu primera compra! Tenés {{ d.porcentaje }}% de descuento.</p>
+          }
+
+          @if (mias().length === 0) {
+            <p class="texto-secundario">Todavía no elegiste butacas.</p>
+          } @else {
+            <ul class="resumen__butacas">
+              @for (b of mias(); track b.id) {
+                <li [attr.data-tipo]="b.tipo">{{ b.fila }}{{ b.numero }}@if (b.tipo === 'vip') { <small>VIP</small> }</li>
+              }
+            </ul>
+
+            <dl class="resumen__lineas">
+              @if (entradasAPagar() > 0) {
+                <div>
+                  <dt>{{ entradasAPagar() }} × Entrada</dt>
+                  <dd>{{ entradasAPagar() * precioEntrada() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</dd>
+                </div>
+              }
+              @if (entradasCubiertas() > 0) {
+                <div class="texto-secundario">
+                  <dt>{{ entradasCubiertas() }} × Entrada en combo</dt>
+                  <dd>incluida</dd>
+                </div>
+              }
+              @if (vipsElegidas() > 0) {
+                <div>
+                  <dt>{{ vipsElegidas() }} × Adicional VIP</dt>
+                  <dd>{{ vipsElegidas() * recargo() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</dd>
+                </div>
+              }
+              @for (l of lineasCandy(); track l.tipo + l.id) {
+                <div>
+                  <dt>{{ l.cantidad }} × {{ l.nombre }}</dt>
+                  <dd>{{ l.precio * l.cantidad | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</dd>
+                </div>
+              }
+            </dl>
+
+            @if (descuento(); as d) {
+              <dl class="resumen__lineas resumen__descuento">
+                <div>
+                  <dt>Subtotal</dt>
+                  <dd>{{ subtotal() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</dd>
+                </div>
+                <div>
+                  <dt>🎁 {{ d.nombre }} ({{ d.porcentaje }}%)</dt>
+                  <dd>− {{ montoDescuento() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</dd>
+                </div>
+              </dl>
+            }
+
+            <div class="resumen__total">
+              <span>Total</span>
+              <strong>{{ total() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong>
+            </div>
+          }
+
+          @if (combosExcedidos()) {
+            <p class="campo__error">Tenés más combos con entrada que butacas. Quitá algún combo o sumá butacas.</p>
+          }
+
+          <div class="resumen__acciones">
+            @switch (paso()) {
+              @case ('butacas') {
+                <button type="button" class="boton boton--primario" [disabled]="mias().length === 0" (click)="irA('candy')">Continuar</button>
+              }
+              @case ('candy') {
+                <button type="button" class="boton boton--primario" [disabled]="combosExcedidos()" (click)="irA('pago')">
+                  {{ lineasCandy().length > 0 ? 'Continuar al pago' : 'Seguir sin candy' }}
+                </button>
+                <button type="button" class="compra__secundario" (click)="irA('butacas')">← Cambiar butacas</button>
+              }
+              @case ('pago') {
+                <button type="button" class="compra__secundario" (click)="irA('candy')">← Volver al candy</button>
+              }
+            }
+            @if (mias().length > 0) {
+              <button type="button" class="compra__cancelar" (click)="cancelar()">Cancelar y liberar butacas</button>
+            }
+          </div>
+        </aside>
+      }
+    </div>
+  }
+</section>

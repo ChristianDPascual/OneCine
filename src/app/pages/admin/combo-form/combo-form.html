@@ -1,0 +1,239 @@
+<section class="combo-form">
+  <header class="combo-form__encabezado">
+    <span class="etiqueta-cine">Combos</span>
+    <h1 class="titulo-seccion">{{ esEdicion() ? 'Editar combo' : 'Nuevo combo' }}</h1>
+  </header>
+
+  @if (noEncontrado()) {
+    <div class="combo-form__aviso" role="alert">
+      <p class="titulo-pelicula">Combo no encontrado</p>
+      <p class="texto-secundario">El combo que querés editar no existe. Volvé al listado con el botón de arriba.</p>
+    </div>
+  } @else {
+    <form class="combo-form__form" [formGroup]="formulario" (ngSubmit)="guardar()">
+
+      <!-- ---------- Datos ---------- -->
+      <fieldset class="combo-form__grupo">
+        <legend>Datos del combo</legend>
+
+        <div class="campo">
+          <label for="combo-nombre">Nombre</label>
+          <input id="combo-nombre" type="text" formControlName="nombre" maxlength="80" placeholder="Ej.: Combo Pareja"
+                 [attr.aria-invalid]="campos.nombre.touched && campos.nombre.invalid" />
+          @if (campos.nombre.touched && campos.nombre.invalid) {
+            <p class="campo__error">Ingresá el nombre del combo.</p>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="combo-precio">Precio del combo ($)</label>
+          <input id="combo-precio" type="number" inputmode="decimal" min="1" step="0.01" formControlName="precio"
+                 [attr.aria-invalid]="campos.precio.touched && campos.precio.invalid" />
+          @if (campos.precio.touched && campos.precio.invalid) {
+            <p class="campo__error">
+              @if (campos.precio.hasError('required')) { Ingresá el precio. }
+              @else { El precio tiene que ser mayor a 0. }
+            </p>
+          }
+        </div>
+
+        <div class="campo combo-form__completo">
+          <label for="combo-descripcion">Descripción <span class="combo-form__opcional">(opcional)</span></label>
+          <textarea id="combo-descripcion" rows="2" formControlName="descripcion" [maxlength]="largoMaximoDescripcion"
+                    placeholder="Ej.: Ideal para compartir"></textarea>
+          <span class="combo-form__contador">{{ largoDescripcion().length }}/{{ largoMaximoDescripcion }}</span>
+        </div>
+      </fieldset>
+
+      <!-- ---------- Productos ---------- -->
+      <fieldset id="combo-productos" tabindex="-1" class="combo-form__grupo combo-form__productos">
+        <legend>¿Qué incluye?</legend>
+
+        <div class="combo-form__catalogo">
+          <div class="combo-form__buscador">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input #buscarProducto type="search" placeholder="Buscar producto..." aria-label="Buscar producto"
+                   (input)="busquedaProducto.set(buscarProducto.value)" />
+          </div>
+
+          @for (grupo of grupos(); track grupo.categoria.id) {
+            <div class="combo-form__categoria">
+              <h3 class="combo-form__categoria-titulo">{{ grupo.categoria.nombre }}</h3>
+              <ul class="combo-form__lista">
+                @for (producto of grupo.productos; track producto.id) {
+                  <li class="item-producto" [class.item-producto--elegido]="cantidadDe(producto.id) > 0">
+                    <div class="item-producto__miniatura">
+                      @if (producto.imagen_url) { <img [src]="producto.imagen_url" alt="" loading="lazy" /> }
+                    </div>
+                    <div class="item-producto__datos">
+                      <span class="item-producto__nombre">
+                        {{ producto.nombre }}
+                        @if (!producto.activo) { <span class="texto-secundario">(inactivo)</span> }
+                      </span>
+                      <span class="texto-secundario">{{ producto.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+                    </div>
+                    <div class="contador" role="group" [attr.aria-label]="'Cantidad de ' + producto.nombre">
+                      <button type="button" class="contador__boton" [disabled]="cantidadDe(producto.id) === 0"
+                              [attr.aria-label]="'Quitar un ' + producto.nombre" (click)="cambiarCantidad(producto.id, -1)">−</button>
+                      <span class="contador__valor" aria-live="polite">{{ cantidadDe(producto.id) }}</span>
+                      <button type="button" class="contador__boton" [disabled]="cantidadDe(producto.id) >= cantidadMaxima"
+                              [attr.aria-label]="'Agregar un ' + producto.nombre" (click)="cambiarCantidad(producto.id, 1)">+</button>
+                    </div>
+                  </li>
+                }
+              </ul>
+            </div>
+          } @empty {
+            <p class="texto-secundario">No hay productos para mostrar. Cargalos primero en la sección Productos.</p>
+          }
+        </div>
+
+        <!-- Resumen con el ahorro -->
+        <aside class="resumen" aria-live="polite">
+          <h3 class="resumen__titulo">Resumen</h3>
+
+          @if (incluyeEntrada()) {
+            <div class="resumen__referencia" role="radiogroup" aria-label="Precio de entrada de referencia">
+              <button type="button" role="radio" [attr.aria-checked]="referenciaEntrada() === 'estreno'"
+                      [class.activa]="referenciaEntrada() === 'estreno'" (click)="referenciaEntrada.set('estreno')">
+                Estreno
+              </button>
+              <button type="button" role="radio" [attr.aria-checked]="referenciaEntrada() === 'clasico'"
+                      [class.activa]="referenciaEntrada() === 'clasico'" (click)="referenciaEntrada.set('clasico')">
+                Clásico
+              </button>
+            </div>
+          }
+
+          <ul class="resumen__lista">
+            @if (incluyeEntrada()) {
+              <li>
+                <span>1× Entrada {{ referenciaEntrada() === 'clasico' ? 'clásico' : 'estreno' }}</span>
+                @if (precioEntrada(); as entrada) {
+                  <span>{{ entrada | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+                } @else {
+                  <span class="texto-secundario">sin precio sugerido</span>
+                }
+              </li>
+            }
+            @for (item of seleccion(); track item.producto.id) {
+              <li>
+                <span>{{ item.cantidad }}× {{ item.producto.nombre }}</span>
+                <span>{{ item.producto.precio * item.cantidad | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+              </li>
+            } @empty {
+              <li class="texto-secundario">Todavía no elegiste productos.</li>
+            }
+          </ul>
+
+          @if (seleccion().length > 0) {
+            <div class="resumen__totales">
+              <div><span>Por separado</span><span>{{ precioSeparado() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span></div>
+              @if (precio(); as precioCombo) {
+                <div class="resumen__combo">
+                  <span>Precio del combo</span>
+                  <span>{{ precioCombo | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+                </div>
+                @if (ahorro() > 0) {
+                  <p class="resumen__ahorro">El cliente ahorra {{ ahorro() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }} ({{ porcentajeAhorro() }}%)</p>
+                } @else {
+                  <p class="resumen__aviso">⚠ El combo no es más barato que comprar los productos por separado.</p>
+                }
+              }
+            </div>
+            @if (incluyeEntrada()) {
+              <p class="resumen__nota">
+                @if (precioEntrada() !== null) {
+                  La entrada se calcula con el precio sugerido de "Precios y promos". El precio real depende de la película de la función.
+                } @else {
+                  Configurá el precio sugerido de las entradas en "Precios y promos" para sumarlo al "por separado".
+                }
+              </p>
+            }
+          }
+        </aside>
+
+        @if (campos.items.touched && campos.items.invalid) {
+          <p class="campo__error combo-form__completo">Agregá al menos un producto al combo.</p>
+        }
+      </fieldset>
+
+      <!-- ---------- Imagen ---------- -->
+      <fieldset class="combo-form__grupo combo-form__imagen">
+        <legend>Imagen</legend>
+
+        <div class="campo">
+          <label class="subida" [class.subida--arrastrando]="arrastrando()"
+                 (dragover)="alArrastrar($event)" (dragleave)="arrastrando.set(false)" (drop)="alSoltar($event)">
+            <input type="file" [accept]="tiposImagen" (change)="alElegirArchivo($event)" />
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 16V4M7 9l5-5 5 5" />
+              <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+            </svg>
+            <span class="subida__titulo">{{ vistaPrevia() ? 'Cambiar imagen' : 'Elegir imagen' }}</span>
+            <span class="texto-secundario">o arrastrala hasta acá</span>
+            <span class="subida__ayuda">JPG, PNG o WEBP · hasta {{ pesoMaximoMb }} MB</span>
+          </label>
+
+          @if (errorImagen(); as error) { <p class="campo__error">{{ error }}</p> }
+          @if (archivoImagen(); as archivo) {
+            <p class="texto-secundario">Seleccionada: {{ archivo.name }} (se sube al guardar)</p>
+          }
+          @if (vistaPrevia()) {
+            <button type="button" class="combo-form__quitar" (click)="quitarImagen()">Quitar imagen</button>
+          }
+        </div>
+
+        <div class="combo-form__vista-previa">
+          @if (vistaPrevia(); as url) { <img [src]="url" alt="Vista previa del combo" /> }
+          @else { <span>Sin imagen</span> }
+        </div>
+      </fieldset>
+
+      <!-- ---------- Opciones ---------- -->
+      <fieldset class="combo-form__grupo combo-form__opciones">
+        <legend>Opciones</legend>
+
+        <label class="interruptor">
+          <input type="checkbox" formControlName="incluye_entrada" />
+          <span class="interruptor__control" aria-hidden="true"></span>
+          <span>
+            Incluye entrada
+            <small class="texto-secundario">Se ofrece al comprar entradas: la entrada va incluida en el precio.</small>
+          </span>
+        </label>
+
+        <label class="interruptor">
+          <input type="checkbox" formControlName="destacado" />
+          <span class="interruptor__control" aria-hidden="true"></span>
+          <span>
+            Destacado
+            <small class="texto-secundario">Aparece primero y resaltado en la página de compra.</small>
+          </span>
+        </label>
+
+        <label class="interruptor">
+          <input type="checkbox" formControlName="activo" />
+          <span class="interruptor__control" aria-hidden="true"></span>
+          <span>
+            Disponible para la venta
+            <small class="texto-secundario">Si está apagado, no se ofrece.</small>
+          </span>
+        </label>
+      </fieldset>
+
+      @if (camposInvalidos().length > 0) {
+        <app-alerta titulo="Revisá los datos"
+                    [mensaje]="'Hay campos con errores: ' + camposInvalidos().join(', ') + '.'"
+                    (cerrar)="camposInvalidos.set([])" />
+      }
+      @if (mensajeError(); as mensaje) {
+        <app-alerta titulo="No pudimos guardar" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+      }
+
+      <button type="submit" class="boton boton--primario" [disabled]="enviando()">
+        {{ enviando() ? 'Guardando…' : (esEdicion() ? 'Guardar cambios' : 'Crear combo') }}
+      </button>
+    </form>
+  }
+</section>

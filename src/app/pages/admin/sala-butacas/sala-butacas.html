@@ -1,0 +1,117 @@
+<section class="admin-seccion sala-butacas">
+  @if (noEncontrada()) {
+    <div class="sala-butacas__aviso" role="alert">
+      <p class="titulo-pelicula">Sala no encontrada</p>
+      <p class="texto-secundario">La sala que buscás no existe. Volvé al listado con el botón de arriba.</p>
+    </div>
+  } @else {
+    @if (sala(); as sala) {
+      <div class="sala-butacas__encabezado">
+        <div>
+          <span class="etiqueta-cine">Salas</span>
+          <h1 class="titulo-seccion">Sala {{ sala.numero }} <span class="sala-butacas__formato">{{ sala.formato }}</span></h1>
+          <p class="texto-secundario">{{ descripcionFormato[sala.formato] }} · {{ butacas().length }} butacas</p>
+        </div>
+        <a class="sala-butacas__editar" [routerLink]="['/admin/salas', sala.id, 'editar']">Editar sala</a>
+      </div>
+    }
+
+    @if (mensajeError(); as mensaje) {
+      <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+    }
+
+    <!-- Barra de edición (solo admin y supervisor) -->
+    @if (puedeEditar() && butacas().length > 0) {
+      <div class="edicion" [class.edicion--activa]="editando()">
+        <button type="button" class="edicion__alternar" [attr.aria-pressed]="editando()" (click)="alternarEdicion()">
+          {{ editando() ? 'Terminar edición' : 'Editar tipos de butaca' }}
+        </button>
+
+        @if (editando()) {
+          <div class="edicion__pinceles" role="radiogroup" aria-label="Tipo a aplicar">
+            <span class="texto-secundario">Tocá las butacas para convertirlas en:</span>
+            @for (tipo of tipos; track tipo) {
+              <button type="button" role="radio" class="pincel" [class.pincel--activo]="pincel() === tipo"
+                      [attr.aria-checked]="pincel() === tipo" (click)="pincel.set(tipo)">
+                <span class="butaca butaca--muestra" [attr.data-tipo]="tipo" aria-hidden="true"></span>
+                {{ etiquetasTipo[tipo] }}
+              </button>
+            }
+          </div>
+          @if (mensajeExito(); as mensaje) {
+            <p class="edicion__exito" aria-live="polite">✓ {{ mensaje }}</p>
+          }
+        }
+      </div>
+    }
+
+    @if (butacas().length > 0) {
+      <!-- Leyenda -->
+      <ul class="leyenda">
+        @for (tipo of tipos; track tipo) {
+          <li><span class="butaca butaca--muestra" [attr.data-tipo]="tipo" aria-hidden="true"></span>
+            {{ etiquetasTipo[tipo] }} ({{ cantidadPorTipo()[tipo] }})</li>
+        }
+      </ul>
+
+      <!-- Mapa -->
+      <div class="mapa" [class.mapa--editando]="editando()" role="group" aria-label="Mapa de butacas">
+        <div class="mapa__contenido">
+          <div class="mapa__pantalla">Pantalla</div>
+
+          @for (fila of mapa(); track fila.fila) {
+            <div class="mapa__fila">
+              <span class="mapa__letra">{{ fila.fila }}</span>
+
+              @for (bloque of fila.bloques; track bloque.bloque) {
+                <div class="mapa__bloque">
+                  @for (butaca of bloque.lugares; track $index) {
+                    @if (butaca) {
+                      <button type="button" class="butaca" [attr.data-tipo]="butaca.tipo"
+                              [class.butaca--seleccionada]="seleccionada()?.id === butaca.id"
+                              [class.butaca--guardando]="guardando().has(butaca.id)"
+                              [attr.aria-label]="nombreButaca(butaca)" [title]="nombreButaca(butaca)"
+                              (click)="elegir(butaca)">
+                        {{ butaca.numero }}
+                      </button>
+                    } @else {
+                      <span class="butaca butaca--vacia" aria-hidden="true"></span>
+                    }
+                  }
+                </div>
+              }
+
+              <span class="mapa__letra">{{ fila.fila }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <p class="sala-butacas__detalle" aria-live="polite">
+        @if (editando()) {
+          <span class="texto-secundario">Modo edición: cada butaca que toques pasa a {{ etiquetasTipo[pincel()] }}.</span>
+        } @else if (seleccionada(); as butaca) {
+          <strong>{{ nombreButaca(butaca) }}</strong> <span class="texto-secundario">· id {{ butaca.id }}</span>
+          @if (puedeEditar()) {
+            <span class="detalle-tipos">
+              @for (tipo of tipos; track tipo) {
+                <button type="button" class="pincel" [class.pincel--activo]="butaca.tipo === tipo"
+                        [disabled]="butaca.tipo === tipo || guardando().has(butaca.id)" (click)="cambiarTipo(butaca, tipo)">
+                  <span class="butaca butaca--muestra" [attr.data-tipo]="tipo" aria-hidden="true"></span>
+                  {{ etiquetasTipo[tipo] }}
+                </button>
+              }
+            </span>
+          }
+        } @else {
+          <span class="texto-secundario">Tocá una butaca para ver sus datos{{ puedeEditar() ? ' o cambiar su tipo' : '' }}.</span>
+        }
+      </p>
+    } @else if (sala() && !mensajeError()) {
+      <div class="sala-butacas__aviso">
+        <p class="titulo-pelicula">La sala no tiene butacas</p>
+        <p class="texto-secundario">Las butacas se generan al crear la sala. Revisá el trigger generar_butacas en la base.</p>
+      </div>
+    }
+  }
+</section>

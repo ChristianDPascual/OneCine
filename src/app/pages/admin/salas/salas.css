@@ -1,0 +1,180 @@
+.salas__encabezado {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.salas__encabezado .etiqueta-cine {
+  color: var(--one-red);
+}
+
+.salas__nueva {
+  padding: 0.75rem 1.4rem;
+  border-radius: 999px;
+  background: var(--one-red);
+  color: var(--cinema-white);
+  font-family: var(--font-title);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.salas__nueva:hover,
+.salas__nueva:focus-visible {
+  background: var(--one-red-dark);
+}
+
+.salas__grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.salas__vacio {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed #3a3a42;
+  border-radius: 14px;
+  text-align: center;
+}
+
+/* ---------- Tarjeta ---------- */
+
+.sala {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  background: var(--cinema-surface);
+}
+
+.sala__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sala__numero {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.sala__formato {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: var(--one-red);
+  color: var(--cinema-white);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+}
+
+.sala__descripcion {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.sala__capacidad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+}
+
+.sala__capacidad div {
+  padding: 0.5rem;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.04);
+  text-align: center;
+}
+
+.sala__capacidad .sala__total {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-inline: 0.85rem;
+}
+
+.sala__capacidad dt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: var(--cinema-muted);
+  font-size: 0.75rem;
+}
+
+.sala__capacidad dd {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-title);
+  font-weight: 700;
+}
+
+.sala__total dd {
+  font-size: 1.4rem;
+  color: var(--cinema-gold);
+}
+
+.punto {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 3px;
+}
+
+.punto--estandar { background: #6b6b76; }
+.punto--vip { background: var(--cinema-gold, #d4af37); }
+.punto--accesible { background: #3b82f6; }
+
+.sala__acciones {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.sala__accion {
+  padding: 0.5rem;
+  border: 1px solid #3a3a42;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cinema-white);
+  font-size: 0.85rem;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.sala__accion:hover,
+.sala__accion:focus-visible {
+  border-color: var(--one-red);
+  color: var(--one-red);
+}
+
+.sala__accion--completo {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+
+.sala__accion--peligro:hover,
+.sala__accion--peligro:focus-visible {
+  border-color: #f87171;
+  color: #f87171;
+}

@@ -1,0 +1,72 @@
+<dialog
+  #dialogo
+  class="panel-lateral"
+  aria-labelledby="filtros-titulo"
+  (close)="cerrar.emit()"
+  (click)="cerrarSiClicFuera($event)"
+>
+  <div class="panel-lateral__contenido">
+    <header class="panel-lateral__encabezado">
+      <span id="filtros-titulo">Filtrar películas</span>
+      <button type="button" class="panel-lateral__cerrar" aria-label="Cerrar filtros" (click)="dialogo.close()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </header>
+
+        <form class="filtros" [formGroup]="formulario" (ngSubmit)="aplicarFiltros()">
+      <fieldset class="filtros__grupo">
+        <legend>Géneros</legend>
+
+        @if (cargandoGeneros()) {
+          <p class="texto-secundario" role="status">Cargando géneros…</p>
+        } @else if (errorGeneros()) {
+          <p class="campo__error">No pudimos cargar los géneros. Cerrá el panel e intentá de nuevo.</p>
+        } @else {
+          <div class="filtros__opciones">
+            @for (genero of generos(); track genero.id) {
+              <label class="chip">
+                <input
+                  type="checkbox"
+                  [checked]="generoSeleccionado(genero.id)"
+                  (change)="alternarGenero(genero.id)"
+                />
+                <span>{{ genero.nombre }}</span>
+              </label>
+            }
+          </div>
+        }
+      </fieldset>
+
+      <fieldset class="filtros__grupo">
+        <legend>Clasificación</legend>
+        <div class="filtros__opciones">
+          @for (opcion of opcionesEdad; track opcion.etiqueta) {
+            <label class="chip">
+              <input type="radio" formControlName="edad" [value]="opcion.valor" />
+              <span>{{ opcion.etiqueta }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="filtros__grupo">
+        <legend>Lanzamiento</legend>
+        <div class="filtros__opciones">
+          @for (opcion of opcionesLanzamiento; track opcion.etiqueta) {
+            <label class="chip">
+              <input type="radio" formControlName="lanzamiento" [value]="opcion.valor" />
+              <span>{{ opcion.etiqueta }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <div class="filtros__acciones">
+        <button type="submit" class="boton boton--primario">Buscar</button>
+        <button type="button" class="boton boton--secundario" (click)="borrarFiltros()">Borrar filtros</button>
+      </div>
+    </form>
+  </div>
+</dialog>

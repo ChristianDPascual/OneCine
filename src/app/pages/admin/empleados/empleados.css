@@ -1,0 +1,154 @@
+.empleados__encabezado {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.empleados__encabezado .etiqueta-cine {
+  color: var(--one-red);
+}
+
+.empleados__nuevo {
+  padding: 0.75rem 1.4rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--one-red);
+  color: var(--cinema-white);
+  font-family: var(--font-title);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.empleados__nuevo:hover,
+.empleados__nuevo:focus-visible {
+  background: var(--one-red-dark);
+}
+
+.empleados__tabla-contenedor {
+  margin-top: 1rem;
+  border: 1px solid #2a2a30;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--cinema-surface);
+}
+
+.empleados__tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.empleados__tabla th,
+.empleados__tabla td {
+  padding: 0.9rem 1.1rem;
+  text-align: left;
+  border-bottom: 1px solid #222228;
+}
+
+.empleados__tabla th {
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.empleados__tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.empleados__tabla tr.inactivo td {
+  color: var(--cinema-muted);
+}
+
+.empleados__nombre {
+  font-weight: 500;
+}
+
+.empleados__puesto {
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: #222228;
+  color: var(--cinema-gold);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.empleados__estado {
+  font-size: 0.85rem;
+  color: var(--cinema-muted);
+}
+
+.empleados__estado--activo {
+  color: #4ade80;
+}
+
+.empleados__acciones {
+  text-align: right;
+}
+
+.empleados__accion {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #3a3a42;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cinema-white);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.empleados__accion:hover,
+.empleados__accion:focus-visible {
+  border-color: var(--one-red);
+  color: var(--one-red);
+}
+
+.empleados__vacio {
+  text-align: center;
+  color: var(--cinema-muted);
+}
+
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* En celular, cada fila se muestra como tarjeta */
+@media (max-width: 760px) {
+  .empleados__tabla thead {
+    display: none;
+  }
+
+  .empleados__tabla tr {
+    display: block;
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid #222228;
+  }
+
+  .empleados__tabla td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.3rem 0;
+    border: none;
+  }
+
+  .empleados__tabla td[data-label]::before {
+    content: attr(data-label);
+    color: var(--cinema-muted);
+    font-size: 0.8rem;
+  }
+
+  .empleados__acciones {
+    justify-content: flex-end;
+    padding-top: 0.6rem;
+  }
+}

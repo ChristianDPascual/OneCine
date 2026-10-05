@@ -1,0 +1,80 @@
+<section class="promo-form">
+  <header class="promo-form__encabezado">
+    <span class="etiqueta-cine">Precios y promos</span>
+    <h1 class="titulo-seccion">{{ esEdicion() ? 'Editar promoción' : 'Nueva promoción' }}</h1>
+  </header>
+
+  @if (noEncontrada()) {
+    <div class="promo-form__aviso" role="alert">
+      <p class="titulo-pelicula">Promoción no encontrada</p>
+      <p class="texto-secundario">La promoción que querés editar no existe. Volvé con el botón de arriba.</p>
+    </div>
+  } @else {
+    <form class="promo-form__form" [formGroup]="formulario" (ngSubmit)="guardar()">
+      <fieldset class="promo-form__grupo">
+        <legend>Datos de la promoción</legend>
+
+        <div class="campo promo-form__completo">
+          <label for="promo-nombre">Nombre</label>
+          <input id="promo-nombre" type="text" formControlName="nombre" maxlength="60" placeholder="Ej.: Martes de cine"
+                 [attr.aria-invalid]="campos.nombre.touched && campos.nombre.invalid" />
+          @if (campos.nombre.touched && campos.nombre.invalid) {
+            <p class="campo__error">Ingresá el nombre de la promoción.</p>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="promo-porcentaje">Descuento (%)</label>
+          <input id="promo-porcentaje" type="number" inputmode="numeric" min="1" max="100" step="1" formControlName="porcentaje"
+                 [attr.aria-invalid]="campos.porcentaje.touched && campos.porcentaje.invalid" />
+          @if (campos.porcentaje.touched && campos.porcentaje.invalid) {
+            <p class="campo__error">
+              @if (campos.porcentaje.hasError('required')) { Ingresá el porcentaje. }
+              @else { Entre 1 y 100. }
+            </p>
+          }
+        </div>
+
+        <label class="interruptor promo-form__interruptor">
+          <input type="checkbox" formControlName="activo" />
+          <span class="interruptor__control" aria-hidden="true"></span>
+          <span>Activa</span>
+        </label>
+      </fieldset>
+
+      <fieldset class="promo-form__grupo">
+        <legend>Vigencia <span class="promo-form__opcional">(opcional)</span></legend>
+
+        <div class="campo">
+          <label for="promo-desde">Desde</label>
+          <app-campo-fecha inputId="promo-desde" formControlName="vigente_desde" />
+          @if (formulario.controls.vigente_desde.touched && formulario.controls.vigente_desde.hasError('fechaIncompleta')) {
+            <p class="campo__error">Completá día, mes y año.</p>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="promo-hasta">Hasta</label>
+          <app-campo-fecha inputId="promo-hasta" formControlName="vigente_hasta" />
+          @if (formulario.controls.vigente_hasta.touched && formulario.controls.vigente_hasta.hasError('fechaIncompleta')) {
+            <p class="campo__error">Completá día, mes y año.</p>
+          }
+        </div>
+
+        @if (formulario.hasError('rangoInvalido')) {
+          <p class="campo__error promo-form__completo">La fecha de fin no puede ser anterior a la de inicio.</p>
+        } @else {
+          <p class="texto-secundario promo-form__completo">Sin fechas, la promoción está vigente mientras esté activa.</p>
+        }
+      </fieldset>
+
+      @if (mensajeError(); as mensaje) {
+        <app-alerta titulo="No pudimos guardar" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+      }
+
+      <button type="submit" class="boton boton--primario" [disabled]="enviando()">
+        {{ enviando() ? 'Guardando…' : (esEdicion() ? 'Guardar cambios' : 'Crear promoción') }}
+      </button>
+    </form>
+  }
+</section>

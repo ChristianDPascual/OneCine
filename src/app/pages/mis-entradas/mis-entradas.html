@@ -1,0 +1,107 @@
+<section class="mis-entradas">
+  <header class="mis-entradas__encabezado">
+    <span class="etiqueta-cine">Mi cuenta</span>
+    <h1 class="titulo-seccion">Mis entradas</h1>
+    <p class="texto-secundario">Mostrá el QR de la entrada en la puerta de la sala y el del candy al retirar tu pedido.</p>
+  </header>
+
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+
+  <div class="pestanas" role="tablist" aria-label="Mis entradas">
+    <button type="button" role="tab" class="pestana" [class.activa]="pestana() === 'proximas'"
+            [attr.aria-selected]="pestana() === 'proximas'" (click)="pestana.set('proximas')">
+      Próximas ({{ proximas().length }})
+    </button>
+    <button type="button" role="tab" class="pestana" [class.activa]="pestana() === 'pasadas'"
+            [attr.aria-selected]="pestana() === 'pasadas'" (click)="pestana.set('pasadas')">
+      Anteriores ({{ pasadas().length }})
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <div class="esqueleto" aria-hidden="true"></div>
+    <div class="esqueleto" aria-hidden="true"></div>
+  } @else {
+    <div class="lista">
+      @for (t of visibles(); track t.compra.id) {
+        <article class="compra" [class.compra--pasada]="pestana() === 'pasadas'">
+          <!-- Datos de la función -->
+          <div class="compra__info">
+            @if (t.imagen) {
+              <img class="compra__poster" [src]="t.imagen" [alt]="'Póster de ' + t.titulo" loading="lazy" />
+            }
+            <div class="compra__datos">
+              <h2 class="compra__titulo">{{ t.titulo }}</h2>
+              <p class="compra__cuando">{{ t.inicio | date: "EEEE d 'de' MMMM · HH:mm" }} hs</p>
+              <p class="texto-secundario">{{ t.sala }} · {{ t.idioma }}</p>
+              <ul class="compra__butacas" aria-label="Butacas">
+                @for (b of t.butacas; track b.etiqueta) {
+                  <li [class.vip]="b.vip">{{ b.etiqueta }}</li>
+                }
+              </ul>
+              <p class="compra__pie">
+                Código <strong>{{ t.compra.codigo }}</strong> · {{ t.compra.total | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}
+                @if (t.cancelada) { <span class="estado estado--cancelada">Cancelada</span> }
+              </p>
+            </div>
+          </div>
+
+          <!-- QR -->
+          @if (!t.cancelada) {
+            <div class="compra__qrs">
+              <div class="qr">
+                <span class="qr__titulo">🎬 Sala</span>
+                <button type="button" class="qr__boton" (click)="ampliado.set({ valor: qrSala(t.compra.codigo), titulo: 'Entrada · ' + t.titulo })"
+                        aria-label="Ampliar QR de la entrada">
+                  <app-codigo-qr [valor]="qrSala(t.compra.codigo)" [tamano]="120" descripcion="QR de la entrada a la sala" />
+                </button>
+                @if (t.compra.validada_sala_at) {
+                  <span class="estado estado--usado">Ingresó {{ t.compra.validada_sala_at | date: 'HH:mm' }}</span>
+                } @else {
+                  <span class="qr__ayuda">Tocá para ampliar</span>
+                }
+              </div>
+
+              @if (t.candy.length > 0) {
+                <div class="qr qr--candy">
+                  <span class="qr__titulo">🍿 Candy</span>
+                  <button type="button" class="qr__boton" (click)="ampliado.set({ valor: qrCandy(t.compra.codigo), titulo: 'Candy · ' + t.candy.join(', ') })"
+                          aria-label="Ampliar QR del candy bar">
+                    <app-codigo-qr [valor]="qrCandy(t.compra.codigo)" [tamano]="120" descripcion="QR para retirar en el candy bar" />
+                  </button>
+                  @if (t.compra.validada_candy_at) {
+                    <span class="estado estado--usado">Retirado {{ t.compra.validada_candy_at | date: 'HH:mm' }}</span>
+                  } @else {
+                    <span class="qr__ayuda">{{ t.candy.join(' · ') }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </article>
+      } @empty {
+        <div class="vacio">
+          @if (pestana() === 'proximas') {
+            <p class="titulo-pelicula">No tenés entradas para próximas funciones</p>
+            <a routerLink="/cartelera" class="vacio__boton">Ver la cartelera</a>
+          } @else {
+            <p class="titulo-pelicula">Todavía no tenés funciones anteriores</p>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<!-- QR ampliado para mostrar en la puerta -->
+@if (ampliado(); as a) {
+  <div class="ampliado" role="dialog" aria-modal="true" [attr.aria-label]="a.titulo" (click)="ampliado.set(null)">
+    <div class="ampliado__caja" (click)="$event.stopPropagation()">
+      <p class="ampliado__titulo">{{ a.titulo }}</p>
+      <app-codigo-qr [valor]="a.valor" [tamano]="280" [descripcion]="a.titulo" />
+      <button type="button" class="ampliado__cerrar" (click)="ampliado.set(null)">Cerrar</button>
+    </div>
+  </div>
+}

@@ -1,0 +1,118 @@
+<section class="empleado-nuevo">
+  <header class="empleado-nuevo__encabezado">
+    <span class="etiqueta-cine">Empleados</span>
+    <h1 class="titulo-seccion">Nuevo empleado</h1>
+    <p class="texto-secundario">Con estos datos va a poder ingresar al panel de empleados.</p>
+  </header>
+
+  <form class="empleado-nuevo__form" [formGroup]="formulario" (ngSubmit)="guardar()">
+    <fieldset class="empleado-nuevo__grupo">
+      <legend>Datos personales</legend>
+
+      <div class="campo">
+        <label for="emp-nombre">Nombre</label>
+        <input id="emp-nombre" type="text" formControlName="nombre" autocapitalize="words" maxlength="50"
+               [attr.aria-invalid]="campos.nombre.touched && campos.nombre.invalid" />
+        @if (campos.nombre.touched && campos.nombre.invalid) {
+          <p class="campo__error">
+            @if (campos.nombre.hasError('required')) { Ingresá el nombre. }
+            @else if (campos.nombre.hasError('minlength')) { Debe tener al menos 2 letras. }
+            @else { Usá solo letras. Se permiten espacios, guiones y apóstrofes. }
+          </p>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="emp-apellido">Apellido</label>
+        <input id="emp-apellido" type="text" formControlName="apellido" autocapitalize="words" maxlength="50"
+               [attr.aria-invalid]="campos.apellido.touched && campos.apellido.invalid" />
+        @if (campos.apellido.touched && campos.apellido.invalid) {
+          <p class="campo__error">
+            @if (campos.apellido.hasError('required')) { Ingresá el apellido. }
+            @else if (campos.apellido.hasError('minlength')) { Debe tener al menos 2 letras. }
+            @else { Usá solo letras. Se permiten espacios, guiones y apóstrofes. }
+          </p>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="emp-dni">DNI</label>
+        <input id="emp-dni" type="text" inputmode="numeric" maxlength="8" formControlName="dni"
+               [attr.aria-invalid]="campos.dni.touched && campos.dni.invalid" />
+        @if (campos.dni.touched && campos.dni.invalid) {
+          <p class="campo__error">
+            @if (campos.dni.hasError('required')) { Ingresá el DNI. }
+            @else { Solo números, 7 u 8 dígitos, sin puntos. }
+          </p>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="emp-puesto">Puesto</label>
+        <select id="emp-puesto" formControlName="puesto"
+                [attr.aria-invalid]="campos.puesto.touched && campos.puesto.invalid">
+          <option value="" disabled>Elegí un puesto</option>
+          @for (puesto of puestos(); track puesto) {
+            <option [value]="puesto">{{ puesto | puesto }}</option>
+          }
+        </select>
+        @if (campos.puesto.touched && campos.puesto.invalid) {
+          <p class="campo__error">Elegí el puesto.</p>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="empleado-nuevo__grupo">
+      <legend>Acceso al panel</legend>
+
+      <div class="campo">
+        <label for="emp-email">Correo electrónico</label>
+        <input id="emp-email" type="email" formControlName="email" autocomplete="off"
+               [attr.aria-invalid]="campos.email.touched && campos.email.invalid" />
+        @if (campos.email.touched && campos.email.invalid) {
+          <p class="campo__error">
+            @if (campos.email.hasError('required')) { Ingresá el correo. }
+            @else { El correo no tiene un formato válido. }
+          </p>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="emp-password">Contraseña inicial</label>
+        <div class="campo__password">
+          <input id="emp-password" [type]="verPassword() ? 'text' : 'password'" formControlName="password"
+                 autocomplete="new-password"
+                 [attr.aria-invalid]="campos.password.touched && campos.password.invalid" />
+          <button type="button" class="campo__ojo"
+                  [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  [attr.aria-pressed]="verPassword()"
+                  (click)="verPassword.set(!verPassword())">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+              @if (verPassword()) { <path d="M3 3l18 18" /> }
+            </svg>
+          </button>
+        </div>
+        @if (campos.password.touched && campos.password.invalid) {
+          <p class="campo__error">
+            @if (campos.password.hasError('required')) { Ingresá una contraseña. }
+            @else if (campos.password.hasError('conEspacios')) { La contraseña no puede tener espacios. }
+            @else { Debe tener al menos 6 caracteres. }
+          </p>
+        }
+      </div>
+    </fieldset>
+
+    @if (mensajeError(); as mensaje) {
+      <app-alerta titulo="No pudimos crear el empleado" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+    }
+
+    <div class="empleado-nuevo__acciones">
+      <a routerLink="/admin/empleados" class="boton boton--secundario">Cancelar</a>
+      <button type="submit" class="boton boton--primario" [disabled]="enviando()">
+        {{ enviando() ? 'Creando empleado…' : 'Crear empleado' }}
+      </button>
+    </div>
+  </form>
+</section>

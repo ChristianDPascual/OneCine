@@ -1,0 +1,22 @@
+@if (!enAdmin()) {
+  <app-navbar />
+}
+
+<router-outlet />
+
+@if (confirmacion.pedido(); as pedido) {
+  <app-confirmacion
+    [titulo]="pedido.titulo"
+    [mensaje]="pedido.mensaje"
+    [textoConfirmar]="pedido.textoConfirmar"
+    [textoCancelar]="pedido.textoCancelar"
+    (respuesta)="confirmacion.responder($event)"
+  />
+}
+
+@if (loading.cargando()) {
+  <div class="overlay-carga" role="status" aria-live="polite">
+    <img class="overlay-carga__spinner" src="assets/branding/spinner_carga.gif" alt="" />
+    <span class="overlay-carga__texto">Cargando…</span>
+  </div>
+}

@@ -1,0 +1,63 @@
+<section class="sala-form">
+  <header class="sala-form__encabezado">
+    <span class="etiqueta-cine">Salas</span>
+    <h1 class="titulo-seccion">{{ esEdicion() ? 'Editar sala' : 'Nueva sala' }}</h1>
+  </header>
+
+  @if (noEncontrada()) {
+    <div class="sala-form__aviso" role="alert">
+      <p class="titulo-pelicula">Sala no encontrada</p>
+      <p class="texto-secundario">La sala que querés editar no existe. Volvé al listado con el botón de arriba.</p>
+    </div>
+  } @else {
+    <form class="sala-form__form" [formGroup]="formulario" (ngSubmit)="guardar()">
+      <fieldset class="sala-form__grupo">
+        <legend>Datos de la sala</legend>
+
+        <div class="campo">
+          <label for="sala-numero">Número de sala</label>
+          <input id="sala-numero" type="number" inputmode="numeric" min="1" [max]="numeroMaximo" step="1"
+                 formControlName="numero" placeholder="Ej.: 6"
+                 [attr.aria-invalid]="campos.numero.touched && campos.numero.invalid" />
+          @if (campos.numero.touched && campos.numero.invalid) {
+            <p class="campo__error">
+              @if (campos.numero.hasError('required')) { Ingresá el número de la sala. }
+              @else { Un número entero entre 1 y {{ numeroMaximo }}. }
+            </p>
+          }
+        </div>
+
+        <div class="campo sala-form__completo" role="radiogroup" aria-labelledby="sala-formato-titulo">
+          <span id="sala-formato-titulo" class="sala-form__etiqueta">Formato</span>
+          <div class="formatos">
+            @for (formato of formatos; track formato) {
+              <label class="formato">
+                <input type="radio" formControlName="formato" [value]="formato" />
+                <span class="formato__caja">
+                  <span class="formato__titulo">{{ formato }}</span>
+                  <span class="formato__ayuda">{{ descripcionFormato[formato] }}</span>
+                </span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <p class="sala-form__nota sala-form__completo">
+          @if (esEdicion()) {
+            Las butacas no cambian al editar: solo se actualizan el número y el formato.
+          } @else {
+            Al crear la sala, la base genera automáticamente sus butacas (filas A a T, con la fila K accesible y las filas R, S y T VIP).
+          }
+        </p>
+      </fieldset>
+
+      @if (mensajeError(); as mensaje) {
+        <app-alerta titulo="No pudimos guardar" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+      }
+
+      <button type="submit" class="boton boton--primario" [disabled]="enviando()">
+        {{ enviando() ? 'Guardando…' : (esEdicion() ? 'Guardar cambios' : 'Crear sala') }}
+      </button>
+    </form>
+  }
+</section>
