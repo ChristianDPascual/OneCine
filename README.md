@@ -43,7 +43,7 @@ Montserrat: destinada a títulos de secciones, encabezados y elementos que requi
 Poppins: utilizada para el resto de la interfaz, especialmente en textos, precios, horarios y selección de butacas, priorizando la legibilidad en tamaños pequeños.
 
 ## Iconografia:
-Titulo:
+Logo:
 
 <table>
   <tr>
@@ -56,7 +56,7 @@ Titulo:
   </tr>
 </table>
 
-Icono:
+Isotipo:
 
 <table>
   <tr>
