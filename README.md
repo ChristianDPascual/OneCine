@@ -11,7 +11,6 @@ Desarrollar una aplicación web integral para la gestión y operación de un est
 La aplicación contará con Angular como tecnología de front-end y Supabase como back-end, incluyendo la gestión de datos, autenticación y servicios necesarios para el funcionamiento del sistema.
 
 El objetivo es brindar una herramienta que permita tanto la gestión interna del establecimiento como una experiencia sencilla e intuitiva para los clientes, contemplando diferentes perfiles de usuario y permisos según sus responsabilidades.
-Año: 2026, Segundo cuatrimestre.
 
 # Requerimientos:
 
