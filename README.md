@@ -50,7 +50,8 @@ Titulo:
   <tr>
     <td bgcolor="#000000">
 
-<img width="1600" height="316" alt="image" src="https://github.com/user-attachments/assets/0f1310da-faca-4822-a36e-d12f82dcbcce" />
+<img width="2172" height="430" alt="logo-onecine" src="https://github.com/user-attachments/assets/730b5c37-8280-4db4-a82b-0389a0884eb0" />
+
 
   </td>
   </tr>
@@ -62,7 +63,7 @@ Icono:
   <tr>
     <td bgcolor="#000000">
 
-<img width="1278" height="1230" alt="image" src="https://github.com/user-attachments/assets/a269f4f3-ecc5-4146-901d-02ede8a8062f" />
+<img width="1278" height="1230" alt="LuLOGO" src="https://github.com/user-attachments/assets/83d9d404-e362-4ff4-9c3f-dcd81f854081" />
 
   </td>
   </tr>
@@ -75,7 +76,8 @@ Spinner de carga:
   <tr>
     <td bgcolor="#000000">
 
-<img width="400" height="277" alt="image" src="https://github.com/user-attachments/assets/76b205f6-f437-444c-b7d3-0b7d86412680" />
+<img width="400" height="277" alt="spinner_carga" src="https://github.com/user-attachments/assets/786b5ae2-a351-4385-8a84-3347310a06e9" />
+
 
   </td>
   </tr>
@@ -88,7 +90,8 @@ Favicon:
   <tr>
     <td bgcolor="#000000">
 
-<img width="512" height="512" alt="image" src="https://github.com/user-attachments/assets/279e05fd-884b-4691-8508-9743620c4f4f" />
+<img width="512" height="512" alt="onecine-icon-512" src="https://github.com/user-attachments/assets/7014c5ae-615d-4031-881e-a83c215ac642" />
+
 
   </td>
   </tr>
