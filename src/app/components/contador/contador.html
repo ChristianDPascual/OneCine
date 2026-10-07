@@ -1,0 +1,11 @@
+@if (cantidad() === 0) {
+  <button type="button" class="contador__agregar" [disabled]="!puedeSumar()"
+          [attr.aria-label]="'Agregar ' + nombre()" (click)="cambiar.emit(1)">Agregar</button>
+} @else {
+  <div class="contador" role="group" [attr.aria-label]="'Cantidad de ' + nombre()">
+    <button type="button" [attr.aria-label]="'Quitar uno de ' + nombre()" (click)="cambiar.emit(-1)">−</button>
+    <span aria-live="polite">{{ cantidad() }}</span>
+    <button type="button" [disabled]="!puedeSumar()" [attr.aria-label]="'Sumar uno de ' + nombre()"
+            (click)="cambiar.emit(1)">+</button>
+  </div>
+}

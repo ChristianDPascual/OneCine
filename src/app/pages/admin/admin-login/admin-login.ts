@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -28,6 +28,9 @@ export class AdminLogin {
   protected readonly verPassword = signal(false);
   protected readonly enviando = signal(false);
   protected readonly mensajeError = signal<string | null>(null);
+
+  // Si hay un cliente logueado se le avisa que su sesión se va a reemplazar
+  protected readonly emailCliente = computed(() => (this.auth.logueado() ? this.auth.usuario()?.email ?? null : null));
 
   protected async ingresar(): Promise<void> {
     if (this.enviando()) {

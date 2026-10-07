@@ -71,33 +71,80 @@
       <section class="funciones" [attr.aria-labelledby]="'funciones-titulo-' + p.id">
         <h3 [id]="'funciones-titulo-' + p.id">Comprar entradas</h3>
 
-        @if (cargandoFunciones()) {
-          <p class="texto-secundario">Buscando funciones…</p>
-        } @else if (funcionesPorDia().length === 0) {
-          <p class="aviso-vacio">Todavía no hay funciones a la venta</p>
-        } @else {
-          @if (!auth.logueado()) {
-            <p class="funciones__sesion">Iniciá sesión para comprar tus entradas.</p>
+        @switch (estadoFunciones()) {
+          @case ('inicial') {
+            <button type="button" class="boton boton--primario funciones__ver" (click)="verHorarios()">Ver horarios</button>
           }
-          @for (grupo of funcionesPorDia(); track grupo.dia) {
-            <div class="funciones__dia">
-              <span class="funciones__fecha">{{ grupo.fecha | date: "EEE d 'de' MMM" }}</span>
-              <div class="funciones__horarios">
-                @for (f of grupo.funciones; track f.id) {
-                  @if (auth.logueado()) {
-                    <a class="horario" [routerLink]="['/comprar', f.id]">
-                      <strong>{{ f.inicio | date: 'HH:mm' }}</strong>
-                      <small>Sala {{ f.sala.numero }} · {{ f.sala.formato }} · {{ f.idioma === 'subtitulada' ? 'SUB' : 'CAST' }}</small>
-                    </a>
-                  } @else {
-                    <span class="horario horario--bloqueado">
-                      <strong>{{ f.inicio | date: 'HH:mm' }}</strong>
-                      <small>Sala {{ f.sala.numero }} · {{ f.sala.formato }} · {{ f.idioma === 'subtitulada' ? 'SUB' : 'CAST' }}</small>
-                    </span>
+          @case ('cargando') {
+            <p class="texto-secundario" aria-live="polite">Buscando funciones…</p>
+          }
+          @case ('error') {
+            <p class="texto-secundario">No pudimos cargar las funciones.</p>
+            <button type="button" class="boton boton--secundario funciones__ver" (click)="verHorarios()">Reintentar</button>
+          }
+          @case ('listo') {
+            @if (fechas().length === 0) {
+              <p class="aviso-vacio">Sin funciones disponibles</p>
+            } @else {
+              <!-- Paso 1: semana (una por vez, solo semanas con funciones) -->
+              @if (semana(); as s) {
+                <div class="semana">
+                  <button type="button" class="semana__flecha" aria-label="Semana anterior"
+                          [disabled]="!hayAnterior()" (click)="cambiarSemana(-1)">‹</button>
+                  <span class="semana__rango" aria-live="polite">
+                    @if (s.desde.getMonth() === s.hasta.getMonth()) {
+                      {{ s.desde | date: 'd' }} - {{ s.hasta | date: 'd MMM' }}
+                    } @else {
+                      {{ s.desde | date: 'd MMM' }} - {{ s.hasta | date: 'd MMM' }}
+                    }
+                  </span>
+                  <button type="button" class="semana__flecha" aria-label="Semana siguiente"
+                          [disabled]="!haySiguiente()" (click)="cambiarSemana(1)">›</button>
+                </div>
+
+                <!-- Paso 2: día (solo los que tienen funciones) -->
+                <span class="funciones__paso" id="funciones-dias">Seleccioná un día</span>
+                <div class="fechas" role="radiogroup" aria-labelledby="funciones-dias">
+                  @for (f of s.dias; track f.dia) {
+                    <button type="button" role="radio" class="fecha" [class.fecha--activa]="diaElegido() === f.dia"
+                            [attr.aria-checked]="diaElegido() === f.dia" (click)="elegirDia(f.dia)">
+                      <small>{{ f.fecha | date: 'EEE' }}</small>
+                      <strong>{{ f.fecha | date: 'd' }}</strong>
+                    </button>
                   }
-                }
-              </div>
-            </div>
+                </div>
+              }
+
+              <!-- Paso 3: horario del día elegido -->
+              @if (fechaElegida(); as fecha) {
+                <div class="funciones__dia" aria-live="polite">
+                  <span class="funciones__fecha">{{ fecha | date: "EEEE d 'de' MMMM" }}</span>
+                  <span class="funciones__paso">Elegí un horario</span>
+
+                  @if (!auth.logueado()) {
+                    <p class="funciones__sesion">
+                      No necesitás cuenta para comprar: elegí un horario y seguí como invitado.
+                      Si tenés cuenta, iniciá sesión para tener descuentos, sumar puntos y guardar tus compras.
+                    </p>
+                  }
+
+                  @if (errorCompra(); as error) {
+                    <p class="funciones__sesion" role="alert">{{ error }}</p>
+                  }
+
+                  <div class="funciones__horarios">
+                    @for (f of horarios(); track f.id) {
+                      <button type="button" class="horario" [disabled]="abriendoCompra()" (click)="irAComprar(f.id)">
+                        <strong>{{ f.inicio | date: 'HH:mm' }}</strong>
+                        <small>Sala {{ f.sala.numero }} · {{ f.sala.formato }} · {{ f.idioma === 'subtitulada' ? 'SUB' : 'CAST' }}</small>
+                      </button>
+                    } @empty {
+                      <p class="texto-secundario">Ya no quedan funciones para este día.</p>
+                    }
+                  </div>
+                </div>
+              }
+            }
           }
         }
       </section>
@@ -105,6 +152,17 @@
       <!-- Reseñas -->
       <section class="resenas" [attr.aria-labelledby]="'resenas-titulo-' + p.id">
         <h3 [id]="'resenas-titulo-' + p.id">Reseñas</h3>
+
+        <!-- Calificar: solo clientes registrados (la base también lo controla) -->
+        @if (auth.logueado()) {
+          <app-form-resena [inicial]="miResena()" [guardando]="guardandoResena()"
+                           (guardar)="guardarResena($event)" (eliminar)="eliminarResena()" />
+          @if (mensajeResena(); as m) {
+            <p class="resenas__mensaje" [class.resenas__mensaje--error]="m.tipo === 'error'" role="status">{{ m.texto }}</p>
+          }
+        } @else {
+          <p class="resenas__sesion">⭐ Iniciá sesión o registrate para calificar esta película y dejar tu comentario.</p>
+        }
 
         @if (cargandoResenas()) {
           <p class="texto-secundario">Cargando reseñas…</p>

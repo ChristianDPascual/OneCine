@@ -1,4 +1,113 @@
 <section class="pagina-cuenta">
   <span class="etiqueta-cine">Mi cuenta</span>
   <h1 class="titulo-seccion">Mis películas</h1>
+
+  @if (error()) {
+    <div class="mp-vacio">
+      <p>No pudimos cargar tu historial.</p>
+      <button type="button" class="boton boton--primario" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (!cargando()) {
+    @if (peliculas().length === 0) {
+      <div class="mp-vacio">
+        <span class="mp-vacio__icono" aria-hidden="true">🎬</span>
+        <p>Todavía no viste ninguna película con nosotros. Cuando vayas a una función, aparece acá.</p>
+        <a routerLink="/cartelera" class="boton boton--primario">Ver cartelera</a>
+      </div>
+    } @else {
+      <!-- ---------- Resumen ---------- -->
+      <div class="mp-resumen">
+        <div>
+          <strong>{{ peliculas().length }}</strong>
+          <span>{{ peliculas().length === 1 ? 'película vista' : 'películas vistas' }}</span>
+        </div>
+        <div>
+          <strong>{{ totalFunciones() }}</strong>
+          <span>{{ totalFunciones() === 1 ? 'función' : 'funciones' }}</span>
+        </div>
+        <div>
+          @if (promedio(); as prom) {
+            <strong>{{ prom | number: '1.1-1' }} ★</strong>
+          } @else {
+            <strong>—</strong>
+          }
+          <span>tu promedio · {{ calificadas().length }} calificadas</span>
+        </div>
+      </div>
+
+      <!-- ---------- Orden ---------- -->
+      <div class="mp-orden" role="radiogroup" aria-label="Ordenar">
+        <button type="button" role="radio" [class.activo]="orden() === 'recientes'" [attr.aria-checked]="orden() === 'recientes'"
+                (click)="orden.set('recientes')">Más recientes</button>
+        <button type="button" role="radio" [class.activo]="orden() === 'mejor'" [attr.aria-checked]="orden() === 'mejor'"
+                (click)="orden.set('mejor')">Mejor calificadas</button>
+        <button type="button" role="radio" [class.activo]="orden() === 'titulo'" [attr.aria-checked]="orden() === 'titulo'"
+                (click)="orden.set('titulo')">A–Z</button>
+      </div>
+
+      <!-- ---------- Galería ---------- -->
+      <ul class="mp-galeria">
+        @for (p of ordenadas(); track p.pelicula_id) {
+          <li class="mp-tarjeta">
+            <div class="mp-tarjeta__poster">
+              @if (p.imagen_url) {
+                <img [src]="p.imagen_url" [alt]="'Póster de ' + p.titulo" loading="lazy" />
+              } @else {
+                <span class="mp-tarjeta__sin-poster" aria-hidden="true">🎬</span>
+              }
+              @if (p.funciones.length > 1) {
+                <span class="mp-tarjeta__veces">×{{ p.funciones.length }}</span>
+              }
+            </div>
+
+            <div class="mp-tarjeta__cuerpo">
+              <h2 class="mp-tarjeta__titulo">{{ p.titulo }}</h2>
+              <p class="mp-tarjeta__meta">{{ p.edad_minima | clasificacion }} · {{ p.duracion_min | duracion }}</p>
+
+              <!-- Mi calificación -->
+              @if (p.mis_estrellas !== null) {
+                <div class="mp-tarjeta__calificacion">
+                  <app-estrellas [valor]="p.mis_estrellas" tamano="1rem" />
+                  <button type="button" class="mp-tarjeta__link" (click)="abrirCalificar(p)">Editar</button>
+                </div>
+                @if (p.mi_comentario) {
+                  <p class="mp-tarjeta__comentario">“{{ p.mi_comentario }}”</p>
+                }
+              } @else {
+                <button type="button" class="mp-tarjeta__calificar" (click)="abrirCalificar(p)">☆ Calificar</button>
+              }
+
+              <!-- Funciones a las que fue -->
+              <ul class="mp-tarjeta__funciones" [attr.aria-label]="'Funciones de ' + p.titulo">
+                @for (f of p.funciones; track f.funcion_id) {
+                  <li>
+                    <span>{{ f.inicio | date: "d MMM y · HH:mm" }}</span>
+                    <small>
+                      Sala {{ f.sala }} · {{ f.formato }} · {{ f.idioma === 'subtitulada' ? 'SUB' : 'CAST' }}
+                      · {{ f.entradas }} {{ f.entradas === 1 ? 'entrada' : 'entradas' }}
+                      @if (f.asistio) { · <span class="mp-tarjeta__asistio">✓ Asististe</span> }
+                    </small>
+                  </li>
+                }
+              </ul>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
 </section>
+
+<!-- Calificar una película (mismo formulario que la ficha) -->
+<dialog #dialogo class="mp-dialogo" aria-labelledby="mp-dialogo-titulo" (close)="alCerrarDialogo()">
+  @if (calificando(); as p) {
+    <div class="mp-dialogo__cabecera">
+      <h2 id="mp-dialogo-titulo">{{ p.titulo }}</h2>
+      <button type="button" class="mp-dialogo__cerrar" aria-label="Cerrar" (click)="cerrarCalificar()">✕</button>
+    </div>
+    <app-form-resena [inicial]="inicial()" [guardando]="guardando()" (guardar)="guardar($event)" (eliminar)="eliminar()" />
+    @if (mensajeResena(); as m) {
+      <p class="mp-dialogo__error" role="alert">{{ m }}</p>
+    }
+  }
+</dialog>

@@ -1,0 +1,153 @@
+<section class="compra-candy">
+  <header class="compra-candy__encabezado">
+    <span class="etiqueta-cine">Candy bar</span>
+    <h1 class="titulo-seccion">{{ compra() ? '¡Compra confirmada!' : 'Tu pedido' }}</h1>
+  </header>
+
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+
+  @if (compra(); as c) {
+    <!-- ---------- Listo: QR para retirar ---------- -->
+    <div class="listo">
+      <p class="texto-secundario">
+        Mostrá este QR en el candy bar para retirar tu pedido.
+        @if (auth.logueado()) { También lo encontrás en <a routerLink="/mis-compras">Mis compras</a>. }
+      </p>
+      <p class="listo__codigo">{{ c.codigo }}</p>
+
+      <article class="ticket">
+        <span class="ticket__tipo">🍿 Retiro en el candy bar</span>
+        <app-codigo-qr [valor]="qrCompra(c.codigo)" [tamano]="200" descripcion="QR para retirar en el candy bar" />
+        <ul class="ticket__productos">
+          @for (l of comprado(); track l.tipo + l.id) {
+            <li>{{ l.cantidad }}× {{ l.nombre }}</li>
+          }
+        </ul>
+      </article>
+
+      @if (c.descuento > 0) {
+        <p class="texto-secundario">
+          Subtotal {{ c.subtotal | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }} ·
+          {{ descuento()?.nombre ?? 'Descuento' }} <span class="monto-descuento">−&nbsp;{{ c.descuento | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+        </p>
+      }
+      <p>Total pagado: <strong>{{ c.total | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong></p>
+      @if (c.puntos_usados > 0 || c.puntos_ganados > 0 || c.credito_usado > 0) {
+        <p class="compra-candy__puntos">
+          @if (c.puntos_usados > 0) { ⭐ Usaste <strong>{{ c.puntos_usados | number }}</strong> puntos. }
+          @if (c.credito_usado > 0) { 💳 Usaste <strong>{{ c.credito_usado | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong> de crédito. }
+          @if (c.puntos_ganados > 0) { Sumaste <strong>{{ c.puntos_ganados | number }}</strong> puntos. }
+          <a routerLink="/mis-puntos">Ver mis puntos</a>
+        </p>
+      }
+
+      @if (auth.esInvitado()) {
+        <p class="compra-candy__invitado">
+          Compraste como invitado: <strong>descargá el comprobante</strong>. Si lo perdés, no vas a poder recuperar esta compra.
+        </p>
+      }
+
+      <app-acciones-compra [descargando]="descargando()" [descargado]="descargado()" [tieneEntradas]="false"
+                           [logueado]="auth.logueado()" [bloqueado]="comprobantePendiente()"
+                           (descargar)="descargarComprobante()" (volver)="volverAlInicio()" />
+    </div>
+  } @else if (carrito.vacio()) {
+    <!-- ---------- Carrito vacío ---------- -->
+    <div class="vacio">
+      <p class="titulo-pelicula">Tu carrito está vacío</p>
+      <a routerLink="/candy" class="boton boton--primario">Ir al candy bar</a>
+    </div>
+  } @else if (carrito.combosConEntrada() > 0) {
+    <!-- ---------- Tiene combos con entrada: van con una función ---------- -->
+    <div class="vacio">
+      <p class="titulo-pelicula">Tu pedido incluye entradas</p>
+      <p class="texto-secundario">Elegí la película y el horario: el candy se paga junto con las entradas.</p>
+      <a routerLink="/cartelera" class="boton boton--primario">Elegir función</a>
+    </div>
+  } @else {
+    <!-- ---------- Pedido + pago ---------- -->
+    <div class="compra-candy__cuerpo">
+      <div class="compra-candy__principal">
+        <ul class="lineas">
+          @for (l of carrito.lineas(); track l.tipo + l.id) {
+            <li class="linea">
+              <div>
+                <strong>{{ l.nombre }}</strong>
+                <span class="texto-secundario">{{ l.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }} c/u</span>
+              </div>
+              <app-contador [cantidad]="l.cantidad" [nombre]="l.nombre" [puedeSumar]="l.cantidad < maximo"
+                            (cambiar)="cambiar(l, $event)" />
+            </li>
+          }
+        </ul>
+        <a routerLink="/candy" class="compra-candy__secundario">+ Agregar más productos</a>
+
+        <!-- Puntos: solo clientes registrados -->
+        @if (auth.logueado() && saldoPuntos() !== null) {
+          <app-pago-puntos [saldo]="saldoPuntos()!" [opciones]="opcionesCanje()" [(seleccion)]="seleccionPuntos" />
+        }
+        <!-- Crédito a favor: solo clientes registrados -->
+        @if (auth.logueado() && saldoCredito() !== null) {
+          <app-pago-credito [saldo]="saldoCredito()!" [aPagar]="aPagarAntesCredito()" [(usar)]="usarCredito" />
+        }
+
+        <h2 class="compra-candy__titulo">Medio de pago</h2>
+        @if (total() > 0) {
+        <div class="metodos" role="radiogroup" aria-label="Medio de pago">
+          <button type="button" role="radio" class="metodo" [class.activo]="metodoPago() === 'credito'"
+                  [attr.aria-checked]="metodoPago() === 'credito'" (click)="metodoPago.set('credito')">💳 Tarjeta de crédito</button>
+          <button type="button" role="radio" class="metodo" [class.activo]="metodoPago() === 'debito'"
+                  [attr.aria-checked]="metodoPago() === 'debito'" (click)="metodoPago.set('debito')">🏦 Tarjeta de débito</button>
+          <button type="button" role="radio" class="metodo" [class.activo]="metodoPago() === 'mercadopago'"
+                  [attr.aria-checked]="metodoPago() === 'mercadopago'" (click)="metodoPago.set('mercadopago')">📱 Mercado Pago</button>
+        </div>
+        } @else {
+          <p class="texto-secundario">El pedido queda cubierto con puntos y/o crédito: no hace falta otro medio de pago.</p>
+        }
+      </div>
+
+      <aside class="resumen" aria-label="Resumen del pedido">
+        @if (auth.esInvitado()) {
+          <p class="compra-candy__invitado">
+            Comprás como <strong>invitado</strong>: sin descuentos ni puntos. <a routerLink="/registro">Registrate</a> para obtenerlos.
+          </p>
+        }
+        <dl class="resumen__lineas">
+          @for (l of carrito.lineas(); track l.tipo + l.id) {
+            <div>
+              <dt>{{ l.cantidad }} × {{ l.nombre }}</dt>
+              <dd>{{ l.precio * l.cantidad | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</dd>
+            </div>
+          }
+          @if (puntosUsados() > 0) {
+            <div class="resumen__descuento">
+              <dt>⭐ Con puntos ({{ puntosUsados() | number }} pts)</dt>
+              <dd><span class="monto-descuento">−&nbsp;{{ valorCanjeado() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span></dd>
+            </div>
+          }
+          @if (descuento(); as d) {
+            <div class="resumen__descuento">
+              <dt>🎁 {{ d.nombre }} ({{ d.porcentaje }}%)</dt>
+              <dd><span class="monto-descuento">−&nbsp;{{ montoDescuento() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span></dd>
+            </div>
+          }
+          @if (creditoAplicado() > 0) {
+            <div class="resumen__descuento">
+              <dt>💳 Crédito a favor</dt>
+              <dd><span class="monto-descuento">−&nbsp;{{ creditoAplicado() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span></dd>
+            </div>
+          }
+        </dl>
+        <div class="resumen__total">
+          <span>Total</span>
+          <strong>{{ total() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong>
+        </div>
+        <button type="button" class="boton boton--primario" [disabled]="pagando()" (click)="pagar()">
+          {{ pagando() ? 'Procesando…' : total() === 0 ? 'Confirmar compra' : 'Pagar' }}
+        </button>
+      </aside>
+    </div>
+  }
+</section>

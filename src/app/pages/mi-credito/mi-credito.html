@@ -1,4 +1,63 @@
 <section class="pagina-cuenta">
   <span class="etiqueta-cine">Mi cuenta</span>
   <h1 class="titulo-seccion">Mi crédito</h1>
+
+  @if (error()) {
+    <div class="credito-vacio">
+      <p>No pudimos cargar tu crédito.</p>
+      <button type="button" class="boton boton--primario" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (resumen(); as r) {
+    <!-- ---------- Saldo ---------- -->
+    <div class="credito-saldo">
+      <div>
+        <span class="credito-saldo__etiqueta">Crédito disponible</span>
+        <strong class="credito-saldo__valor">{{ r.disponible | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong>
+      </div>
+      <ul class="credito-saldo__reglas">
+        <li>Se genera cuando devolvés entradas o productos desde <a routerLink="/mis-compras">Mis compras</a>.</li>
+        <li>Las devoluciones se aceptan hasta <strong>2 horas antes</strong> de la función. No se reintegra dinero.</li>
+        <li>Lo usás como medio de pago en entradas y candy, solo o combinado con puntos y dinero.</li>
+        <li>Lo pagado con crédito no suma puntos.</li>
+      </ul>
+    </div>
+
+    <!-- ---------- Historial ---------- -->
+    <h2 class="credito-historial__titulo">Historial de movimientos</h2>
+
+    @if (r.movimientos.length === 0) {
+      <div class="credito-vacio">
+        <p>Todavía no tenés movimientos de crédito.</p>
+      </div>
+    } @else {
+      <div class="credito-tabla__contenedor">
+        <table class="credito-tabla">
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Concepto</th>
+              <th scope="col" class="numero">Ingreso</th>
+              <th scope="col" class="numero">Usado</th>
+              <th scope="col" class="numero">Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of r.movimientos; track m.id) {
+              <tr>
+                <td data-titulo="Fecha">{{ m.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td data-titulo="Concepto">{{ m.concepto }}</td>
+                <td data-titulo="Ingreso" class="numero credito-tabla__mas">
+                  {{ m.ingreso > 0 ? '+' + (m.ingreso | currency: 'ARS' : 'symbol-narrow' : '1.0-2') : '—' }}
+                </td>
+                <td data-titulo="Usado" class="numero credito-tabla__menos">
+                  {{ m.egreso > 0 ? '-' + (m.egreso | currency: 'ARS' : 'symbol-narrow' : '1.0-2') : '—' }}
+                </td>
+                <td data-titulo="Saldo" class="numero"><strong>{{ m.saldo | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
 </section>

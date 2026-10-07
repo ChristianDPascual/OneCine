@@ -1,0 +1,69 @@
+<section class="candy-funcion">
+  @if (carrito.vacio()) {
+    <div class="candy-funcion__vacio">
+      <p class="titulo-pelicula">Todavía no armaste tu pedido</p>
+      <a routerLink="/candy" class="boton boton--primario">Ir al candy bar</a>
+    </div>
+  } @else {
+    <!-- ---------- Pedido elegido ---------- -->
+    <header class="pedido">
+      <div>
+        <span class="etiqueta-cine">Paso 2 · Elegí la película</span>
+        <h1 class="titulo-seccion">¿Qué vas a ver?</h1>
+        <p class="texto-secundario">Tocá una película, elegí el horario y después tus butacas.</p>
+      </div>
+
+      <div class="pedido__resumen">
+        <span class="pedido__titulo">🍿 Tu pedido</span>
+        <ul>
+          @for (l of carrito.lineas(); track l.tipo + l.id) {
+            <li>{{ l.cantidad }}× {{ l.nombre }}</li>
+          }
+        </ul>
+        @if (carrito.descuento(); as d) {
+          <span class="pedido__descuento">
+            🎁 {{ d.nombre }} ({{ d.porcentaje }}%): <span class="monto-descuento">−&nbsp;{{ carrito.montoDescuento() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+          </span>
+        }
+        <strong>{{ carrito.totalConDescuento() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong>
+        <a routerLink="/candy" class="pedido__cambiar">Modificar pedido</a>
+      </div>
+    </header>
+
+    @if (carrito.combosConEntrada() > 0) {
+      <p class="pedido__nota">
+        {{ carrito.combosConEntrada() === 1 ? 'Tu combo incluye 1 entrada' : 'Tus combos incluyen ' + carrito.combosConEntrada() + ' entradas' }}:
+        se descuentan al elegir las butacas.
+      </p>
+    }
+
+    @if (mensajeError(); as mensaje) {
+      <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+    }
+
+    <!-- ---------- Cartelera ---------- -->
+    @if (cargando()) {
+      <p class="texto-secundario">Cargando la cartelera…</p>
+    } @else {
+      @if (enCartelera().length > 0) {
+        <h2 class="candy-funcion__subtitulo">En cartelera</h2>
+        <div class="grilla">
+          @for (pelicula of enCartelera(); track pelicula.id) {
+            <app-tarjeta-pelicula [pelicula]="pelicula" />
+          }
+        </div>
+      }
+      @if (preventa().length > 0) {
+        <h2 class="candy-funcion__subtitulo">Próximamente · preventa</h2>
+        <div class="grilla">
+          @for (pelicula of preventa(); track pelicula.id) {
+            <app-tarjeta-pelicula [pelicula]="pelicula" />
+          }
+        </div>
+      }
+      @if (enCartelera().length === 0 && preventa().length === 0) {
+        <p class="texto-secundario">Sin películas en cartelera.</p>
+      }
+    }
+  }
+</section>

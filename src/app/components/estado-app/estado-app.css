@@ -1,0 +1,49 @@
+.estado-app {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  padding: 0.7rem 1rem;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.5);
+  font-size: 0.88rem;
+  transform: translateX(-50%);
+}
+
+.estado-app--offline {
+  border: 1px solid #3a3a42;
+  background: #1b1b20;
+  color: var(--cinema-white);
+}
+
+.estado-app--version {
+  border: 1px solid var(--one-red);
+  background: var(--cinema-surface);
+  color: var(--cinema-white);
+}
+
+.estado-app--version button {
+  padding: 0.4rem 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--one-red);
+  color: var(--cinema-white);
+  font: 600 0.85rem var(--font-ui);
+  cursor: pointer;
+}
+
+.estado-app--version .estado-app__cerrar {
+  padding: 0.2rem 0.4rem;
+  background: transparent;
+  color: var(--cinema-muted);
+}
+
+/* Si están los dos avisos, el de versión va arriba del de conexión */
+.estado-app--offline + .estado-app--version {
+  bottom: 4.5rem;
+}

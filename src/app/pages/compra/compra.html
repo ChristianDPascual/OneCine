@@ -17,6 +17,11 @@
           {{ f.inicio | date: "EEEE d 'de' MMMM · HH:mm" }} hs · Sala {{ f.sala.numero }} ({{ f.sala.formato }}) ·
           {{ f.idioma === 'subtitulada' ? 'Subtitulada' : 'Castellano' }}
         </p>
+        @if (paso() !== 'listo') {
+          <!-- Si tiene butacas elegidas, el guard avisa que se libera la reserva -->
+          <a class="compra__secundario compra__cambiar-funcion"
+             [routerLink]="pedidoDelCandy() ? '/candy/funcion' : '/cartelera'">← Cambiar función</a>
+        }
       </div>
 
       @if (restante() !== null && paso() !== 'listo') {
@@ -31,16 +36,14 @@
     @if (paso() !== 'listo') {
       <ol class="pasos">
         <li [class.activo]="paso() === 'butacas'" [class.hecho]="paso() !== 'butacas'">1 · Butacas</li>
-        <li [class.activo]="paso() === 'candy'" [class.hecho]="paso() === 'pago'">2 · Candy bar</li>
-        <li [class.activo]="paso() === 'pago'">3 · Pago</li>
+        @if (pedidoDelCandy()) {
+          <!-- El candy ya se eligió antes, en el Candy bar -->
+          <li [class.activo]="paso() === 'pago'">2 · Pago</li>
+        } @else {
+          <li [class.activo]="paso() === 'candy'" [class.hecho]="paso() === 'pago'">2 · Candy bar</li>
+          <li [class.activo]="paso() === 'pago'">3 · Pago</li>
+        }
       </ol>
-    }
-
-    @if (aviso(); as mensaje) {
-      <div class="aviso" role="alert">
-        <span>{{ mensaje }}</span>
-        <button type="button" aria-label="Cerrar aviso" (click)="aviso.set(null)">✕</button>
-      </div>
     }
 
     @if (mensajeError(); as mensaje) {
@@ -89,6 +92,14 @@
                 }
               </div>
             </div>
+
+            @if (combosConEntrada() > 0) {
+              <p class="candy-paso__nota">
+                🍿 Tenés {{ combosConEntrada() }} {{ combosConEntrada() === 1 ? 'combo' : 'combos' }} con entrada:
+                elegí al menos {{ combosConEntrada() }} {{ combosConEntrada() === 1 ? 'butaca' : 'butacas' }}
+                ({{ mias().length }} de {{ combosConEntrada() }}).
+              </p>
+            }
 
             <p class="texto-secundario compra__nota">
               Quedan {{ libres() }} butacas libres · Podés elegir hasta {{ maximo }}.
@@ -194,10 +205,19 @@
 
           @case ('pago') {
             <div class="pago">
-              <h2 class="candy-paso__titulo">Medio de pago</h2>
-              <p class="texto-secundario">Pago simulado: no se realiza ningún cobro real.</p>
+              <!-- Puntos: solo clientes registrados -->
+              @if (auth.logueado() && saldoPuntos() !== null) {
+                <app-pago-puntos [saldo]="saldoPuntos()!" [opciones]="opcionesCanje()" [(seleccion)]="seleccionPuntos" />
+              }
+              <!-- Crédito a favor: solo clientes registrados -->
+              @if (auth.logueado() && saldoCredito() !== null) {
+                <app-pago-credito [saldo]="saldoCredito()!" [aPagar]="aPagarAntesCredito()" [(usar)]="usarCredito" />
+              }
 
-              <div class="metodos" role="radiogroup" aria-label="Medio de pago">
+              <h2 class="candy-paso__titulo">Medio de pago</h2>
+
+              @if (total() > 0) {
+                <div class="metodos" role="radiogroup" aria-label="Medio de pago">
                 <button type="button" role="radio" class="metodo" [class.activo]="metodoPago() === 'credito'"
                         [attr.aria-checked]="metodoPago() === 'credito'" (click)="metodoPago.set('credito')">💳 Tarjeta de crédito</button>
                 <button type="button" role="radio" class="metodo" [class.activo]="metodoPago() === 'debito'"
@@ -205,9 +225,14 @@
                 <button type="button" role="radio" class="metodo" [class.activo]="metodoPago() === 'mercadopago'"
                         [attr.aria-checked]="metodoPago() === 'mercadopago'" (click)="metodoPago.set('mercadopago')">📱 Mercado Pago</button>
               </div>
+              } @else {
+                <p class="texto-secundario">La compra queda cubierta con puntos y/o crédito: no hace falta otro medio de pago.</p>
+              }
 
               <button type="button" class="boton boton--primario pago__boton" [disabled]="pagando()" (click)="pagar()">
-                {{ pagando() ? 'Procesando pago…' : 'Pagar ' + (total() | currency: 'ARS' : 'symbol-narrow' : '1.0-2') }}
+                {{ pagando() ? 'Procesando pago…'
+                   : total() === 0 ? 'Confirmar compra'
+                   : 'Pagar ' + (total() | currency: 'ARS' : 'symbol-narrow' : '1.0-2') }}
               </button>
             </div>
           }
@@ -218,49 +243,61 @@
                 <span class="listo__icono" aria-hidden="true">✓</span>
                 <h2 class="titulo-seccion">¡Compra confirmada!</h2>
                 <p class="texto-secundario">
-                  Guardá estos códigos: también los encontrás en <a routerLink="/mis-entradas">Mis entradas</a>.
+                  Un solo QR para ingresar a la sala y retirar en el candy bar. Cada parte se canjea una vez.
                 </p>
                 <p class="listo__codigo">{{ c.codigo }}</p>
 
-                <div class="tickets">
-                  <article class="ticket">
-                    <span class="ticket__tipo">🎬 Entrada a la sala</span>
-                    <app-codigo-qr [valor]="qrSala(c.codigo)" [tamano]="190" descripcion="QR para ingresar a la sala" />
-                    <p class="ticket__detalle">
-                      {{ f.pelicula.titulo }}<br />
-                      {{ f.inicio | date: "EEE d/MM · HH:mm" }} hs · Sala {{ f.sala.numero }}
-                    </p>
-                    <ul class="ticket__butacas">
-                      @for (b of butacasCompradas(); track b.id) {
-                        <li [attr.data-tipo]="b.tipo">{{ b.fila }}{{ b.numero }}</li>
+                <article class="ticket ticket--unico">
+                  <app-codigo-qr [valor]="qrCompra(c.codigo)" [tamano]="210" descripcion="QR de la compra: entradas y candy bar" />
+                  <p class="ticket__detalle">
+                    🎬 {{ f.pelicula.titulo }}<br />
+                    {{ f.inicio | date: "EEE d/MM · HH:mm" }} hs · Sala {{ f.sala.numero }}
+                  </p>
+                  <ul class="ticket__butacas">
+                    @for (b of butacasCompradas(); track b.id) {
+                      <li [attr.data-tipo]="b.tipo">{{ b.fila }}{{ b.numero }}</li>
+                    }
+                  </ul>
+                  @if (candyComprado().length > 0) {
+                    <ul class="ticket__productos">
+                      @for (item of candyComprado(); track item.nombre) {
+                        <li>🍿 {{ item.cantidad }}× {{ item.nombre }}</li>
                       }
                     </ul>
-                  </article>
-
-                  @if (candyComprado().length > 0) {
-                    <article class="ticket ticket--candy">
-                      <span class="ticket__tipo">🍿 Retiro en el candy bar</span>
-                      <app-codigo-qr [valor]="qrCandy(c.codigo)" [tamano]="190" descripcion="QR para retirar en el candy bar" />
-                      <ul class="ticket__productos">
-                        @for (item of candyComprado(); track item.nombre) {
-                          <li>{{ item.cantidad }}× {{ item.nombre }}</li>
-                        }
-                      </ul>
-                    </article>
                   }
-                </div>
+                  @if (f.pelicula.edad_minima > 0) {
+                    <p class="ticket__edad">
+                      ⚠️ Película {{ f.pelicula.edad_minima | clasificacion }}: los menores de {{ f.pelicula.edad_minima }} años
+                      deben ingresar acompañados de un adulto.
+                    </p>
+                  }
+                </article>
 
                 @if (c.descuento > 0) {
                   <p class="texto-secundario">
                     Subtotal {{ c.subtotal | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }} ·
-                    Descuento primera compra − {{ c.descuento | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}
+                    {{ descuento()?.nombre ?? 'Descuento' }} <span class="monto-descuento">−&nbsp;{{ c.descuento | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
                   </p>
                 }
                 <p>Total pagado: <strong>{{ c.total | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong></p>
-                <div class="listo__botones">
-                  <a routerLink="/mis-entradas" class="boton boton--primario compra__boton-auto">Ver mis entradas</a>
-                  <a routerLink="/" class="compra__secundario">Volver al inicio</a>
-                </div>
+                @if (c.puntos_usados > 0 || c.puntos_ganados > 0 || c.credito_usado > 0) {
+                  <p class="listo__puntos">
+                    @if (c.puntos_usados > 0) { ⭐ Usaste <strong>{{ c.puntos_usados | number }}</strong> puntos. }
+                    @if (c.credito_usado > 0) { 💳 Usaste <strong>{{ c.credito_usado | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong> de crédito. }
+                    @if (c.puntos_ganados > 0) { Sumaste <strong>{{ c.puntos_ganados | number }}</strong> puntos. }
+                    <a routerLink="/mis-puntos">Ver mis puntos</a>
+                  </p>
+                }
+                @if (auth.esInvitado()) {
+                  <p class="listo__invitado">
+                    Compraste como invitado: <strong>descargá el comprobante</strong>. Si lo perdés, no vas a poder
+                    recuperar esta compra. Registrate para ver tus compras, sumar puntos y tener descuentos.
+                  </p>
+                }
+
+                <app-acciones-compra [descargando]="descargando()" [descargado]="descargado()" [tieneEntradas]="true"
+                                     [logueado]="auth.logueado()" [bloqueado]="comprobantePendiente()"
+                                     (descargar)="descargarComprobante()" (volver)="volverAlInicio()" />
               </div>
             }
           }
@@ -272,8 +309,47 @@
         <aside class="resumen" aria-label="Resumen de la compra">
           <h2>Tu compra</h2>
 
+          @if (auth.esInvitado()) {
+            <p class="resumen__invitado">
+              Estás comprando como <strong>invitado</strong>: sin descuentos ni puntos.
+              <a routerLink="/registro">Registrate</a> para obtenerlos.
+            </p>
+          }
+
+          @if (f.pelicula.edad_minima > 0) {
+            @if (requiereDeclaracion()) {
+              <!-- Invitado (no sabemos su edad) o cliente menor de la edad mínima:
+                   puede comprar, pero tiene que aceptar que ingresa con un adulto -->
+              <div class="resumen__edad">
+                <p>
+                  @if (menorDeEdad()) {
+                    {{ f.pelicula.edad_minima | clasificacion }} · Según tu fecha de nacimiento sos menor de {{ f.pelicula.edad_minima }} años:
+                    <strong>tenés que ingresar acompañado por un adulto</strong>.
+                  } @else {
+                    {{ f.pelicula.edad_minima | clasificacion }} · Los menores de {{ f.pelicula.edad_minima }} años
+                    <strong>tienen que ingresar acompañados por un adulto</strong>.
+                  }
+                </p>
+                <label class="resumen__declaracion">
+                  <input type="checkbox" [checked]="declaraEdad()" (change)="declaraEdad.set($any($event.target).checked); aviso.set(null)" />
+                  Entiendo que los menores de {{ f.pelicula.edad_minima }} años solo pueden ingresar acompañados por un adulto.
+                </label>
+              </div>
+            } @else {
+              <p class="resumen__edad">
+                {{ f.pelicula.edad_minima | clasificacion }} · Los menores de {{ f.pelicula.edad_minima }} años ingresan con un adulto.
+              </p>
+            }
+          }
+
           @if (descuento(); as d) {
-            <p class="resumen__regalo">🎁 ¡Es tu primera compra! Tenés {{ d.porcentaje }}% de descuento.</p>
+            <p class="resumen__regalo">
+              @if (d.tipo === 'primera_compra') {
+                🎁 ¡Es tu primera compra! Tenés {{ d.porcentaje }}% de descuento.
+              } @else {
+                🎁 {{ d.nombre }}: tenés {{ d.porcentaje }}% de descuento.
+              }
+            </p>
           }
 
           @if (mias().length === 0) {
@@ -312,16 +388,30 @@
               }
             </dl>
 
-            @if (descuento(); as d) {
+            @if (descuento() || puntosUsados() > 0 || creditoAplicado() > 0) {
               <dl class="resumen__lineas resumen__descuento">
                 <div>
                   <dt>Subtotal</dt>
                   <dd>{{ subtotal() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</dd>
                 </div>
-                <div>
-                  <dt>🎁 {{ d.nombre }} ({{ d.porcentaje }}%)</dt>
-                  <dd>− {{ montoDescuento() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</dd>
-                </div>
+                @if (puntosUsados() > 0) {
+                  <div>
+                    <dt>⭐ Con puntos ({{ puntosUsados() | number }} pts)</dt>
+                    <dd><span class="monto-descuento">−&nbsp;{{ valorCanjeado() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span></dd>
+                  </div>
+                }
+                @if (descuento(); as d) {
+                  <div>
+                    <dt>🎁 {{ d.nombre }} ({{ d.porcentaje }}%)</dt>
+                    <dd><span class="monto-descuento">−&nbsp;{{ montoDescuento() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span></dd>
+                  </div>
+                }
+                @if (creditoAplicado() > 0) {
+                  <div>
+                    <dt>💳 Crédito a favor</dt>
+                    <dd><span class="monto-descuento">−&nbsp;{{ creditoAplicado() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span></dd>
+                  </div>
+                }
               </dl>
             }
 
@@ -331,14 +421,22 @@
             </div>
           }
 
-          @if (combosExcedidos()) {
+          @if (combosExcedidos() && paso() !== 'butacas') {
             <p class="campo__error">Tenés más combos con entrada que butacas. Quitá algún combo o sumá butacas.</p>
+          }
+
+          <!-- Avisos al lado del botón Continuar (siempre a la vista) -->
+          @if (aviso(); as mensaje) {
+            <div class="aviso" role="alert">
+              <span>{{ mensaje }}</span>
+              <button type="button" aria-label="Cerrar aviso" (click)="aviso.set(null)">✕</button>
+            </div>
           }
 
           <div class="resumen__acciones">
             @switch (paso()) {
               @case ('butacas') {
-                <button type="button" class="boton boton--primario" [disabled]="mias().length === 0" (click)="irA('candy')">Continuar</button>
+                <button type="button" class="boton boton--primario" [disabled]="mias().length === 0" (click)="siguiente()">Continuar</button>
               }
               @case ('candy') {
                 <button type="button" class="boton boton--primario" [disabled]="combosExcedidos()" (click)="irA('pago')">
@@ -347,7 +445,11 @@
                 <button type="button" class="compra__secundario" (click)="irA('butacas')">← Cambiar butacas</button>
               }
               @case ('pago') {
-                <button type="button" class="compra__secundario" (click)="irA('candy')">← Volver al candy</button>
+                @if (pedidoDelCandy()) {
+                  <button type="button" class="compra__secundario" (click)="irA('butacas')">← Cambiar butacas</button>
+                } @else {
+                  <button type="button" class="compra__secundario" (click)="irA('candy')">← Volver al candy</button>
+                }
               }
             }
             @if (mias().length > 0) {

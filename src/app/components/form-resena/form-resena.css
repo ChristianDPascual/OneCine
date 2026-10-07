@@ -1,0 +1,140 @@
+.form-resena {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #2c2c30;
+  border-radius: 12px;
+  background: #121216;
+}
+
+.form-resena__titulo {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.form-resena__estrellas {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  width: fit-content;
+  border-radius: 8px;
+}
+
+.form-resena__estrellas:focus-visible {
+  outline: 2px solid var(--one-red);
+  outline-offset: 4px;
+}
+
+.form-resena__estrella {
+  padding: 0 0.1rem;
+  border: 0;
+  background: none;
+  color: #3a3a42;
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.form-resena__estrella:hover {
+  transform: scale(1.15);
+}
+
+.form-resena__estrella--llena {
+  color: var(--cinema-gold);
+}
+
+.form-resena__etiqueta {
+  margin-left: 0.5rem;
+  color: var(--cinema-muted);
+  font-size: 0.82rem;
+}
+
+.form-resena__comentario {
+  position: relative;
+  display: grid;
+}
+
+.form-resena__comentario textarea {
+  resize: none;
+  padding: 0.6rem 0.75rem 1.4rem;
+  border: 1px solid #3a3a42;
+  border-radius: 10px;
+  background: #0b0b0d;
+  color: var(--cinema-white);
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.form-resena__comentario textarea:focus {
+  outline: none;
+  border-color: var(--one-red);
+}
+
+.form-resena__comentario small {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.4rem;
+  color: var(--cinema-muted);
+  font-size: 0.72rem;
+}
+
+.form-resena__contador--limite {
+  color: #fca5a5 !important;
+}
+
+.form-resena__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-resena__pregunta {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.form-resena__guardar,
+.form-resena__borrar {
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  font: 600 0.85rem var(--font-ui);
+  cursor: pointer;
+}
+
+.form-resena__guardar {
+  border: 1px solid var(--one-red);
+  background: var(--one-red);
+  color: var(--cinema-white);
+}
+
+.form-resena__guardar:hover:not(:disabled) {
+  background: var(--one-red-dark);
+}
+
+.form-resena__borrar {
+  border: 1px solid #3a3a42;
+  background: transparent;
+  color: var(--cinema-muted);
+}
+
+.form-resena__borrar:hover:not(:disabled) {
+  border-color: var(--one-red);
+  color: var(--cinema-white);
+}
+
+.form-resena button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

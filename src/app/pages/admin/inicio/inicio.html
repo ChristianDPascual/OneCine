@@ -2,15 +2,31 @@
 
 <section class="admin-inicio">
   <span class="etiqueta-cine admin-inicio__etiqueta">Panel de empleados</span>
-<h1 class="titulo-seccion">Hola{{ empleado ? ', ' + empleado.nombre + ' ' + empleado.apellido : '' }}</h1>
-  <p class="texto-secundario">Elegí una sección para empezar.</p>
+  <h1 class="titulo-seccion">Hola{{ empleado ? ', ' + empleado.nombre + ' ' + empleado.apellido : '' }}</h1>
 
-  <div class="admin-inicio__grilla">
-    @for (seccion of empleados.secciones(); track seccion.ruta) {
-      <a class="admin-inicio__tarjeta" [routerLink]="['/admin', seccion.ruta]">
-        <span class="titulo-pelicula">{{ seccion.titulo }}</span>
-        <span class="texto-secundario">{{ seccion.descripcion }}</span>
-      </a>
-    }
-  </div>
+  @if (canje(); as tipo) {
+    <!-- Boletería / confitería: el escáner directo, sin pasar por una tarjeta -->
+    <p class="texto-secundario">
+      @if (tipo === 'sala') {
+        🎬 Escaneá el QR de la compra o ingresá el código para <strong>validar el ingreso a la sala</strong>.
+      } @else {
+        🍿 Escaneá el QR de la compra o ingresá el código para <strong>entregar los productos del candy</strong>.
+      }
+    </p>
+
+    <div class="admin-inicio__validador">
+      <app-validador-qr [tipo]="tipo" />
+    </div>
+  } @else {
+    <p class="texto-secundario">Elegí una sección para empezar.</p>
+
+    <div class="admin-inicio__grilla">
+      @for (seccion of empleados.secciones(); track seccion.ruta) {
+        <a class="admin-inicio__tarjeta" [routerLink]="['/admin', seccion.ruta]">
+          <span class="titulo-pelicula">{{ seccion.titulo }}</span>
+          <span class="texto-secundario">{{ seccion.descripcion }}</span>
+        </a>
+      }
+    </div>
+  }
 </section>

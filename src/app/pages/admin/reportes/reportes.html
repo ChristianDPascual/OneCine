@@ -1,1 +1,184 @@
-<p>reportes works!</p>
+<section class="reportes">
+  <header class="reportes__encabezado">
+    <span class="etiqueta-cine reportes__etiqueta">Administración</span>
+    <h1 class="titulo-seccion">Reportes</h1>
+    <p class="texto-secundario">Cada reporte tiene su propio rango de fechas y se descarga en PDF o Excel.</p>
+  </header>
+
+  <div class="pestanas" role="tablist" aria-label="Reportes">
+    <button type="button" role="tab" class="pestana" [class.activa]="pestana() === 'facturacion'"
+            [attr.aria-selected]="pestana() === 'facturacion'" (click)="pestana.set('facturacion')">💰 Facturación por día</button>
+    <button type="button" role="tab" class="pestana" [class.activa]="pestana() === 'entradas'"
+            [attr.aria-selected]="pestana() === 'entradas'" (click)="pestana.set('entradas')">🎟️ Entradas vendidas</button>
+  </div>
+
+  <!-- ===================== Facturación por día ===================== -->
+  @if (pestana() === 'facturacion') {
+    @let r = facturacion();
+    <article class="reporte" role="tabpanel" aria-label="Facturación por día">
+      <ng-container *ngTemplateOutlet="filtros; context: { reporte: 'facturacion', rango: r.rango, tieneDatos: !!r.filas }" />
+
+      @if (r.error) {
+        <p class="reporte__error" role="alert">{{ r.error }}</p>
+      } @else if (r.filas; as filas) {
+        @let t = totalesFacturacion();
+        <div class="reporte__resumen">
+          <div><span>Facturado</span><strong>{{ t.facturado | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong></div>
+          <div><span>Compras</span><strong>{{ t.compras | number }}</strong></div>
+          <div><span>Promedio por día</span><strong>{{ t.facturado / filas.length | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</strong></div>
+          <div><span>Pagado con crédito</span><strong>{{ t.credito | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong></div>
+        </div>
+
+        <!-- Gráfico: una barra por día -->
+        <div class="grafico" role="img" [attr.aria-label]="'Facturación diaria, máximo ' + (maximoFacturado() | currency: 'ARS' : 'symbol-narrow' : '1.0-0')">
+          @for (f of filas; track f.dia) {
+            <div class="grafico__columna" [title]="(f.dia | date: 'd/MM') + ': ' + (f.facturado | currency: 'ARS' : 'symbol-narrow' : '1.0-2')">
+              <span class="grafico__barra" [style.height.%]="(f.facturado / maximoFacturado()) * 100"></span>
+              @if (filas.length <= 31) {
+                <small>{{ f.dia | date: 'd' }}</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="tabla__contenedor">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col" class="numero">Compras</th>
+                <th scope="col" class="numero">Facturado</th>
+                <th scope="col" class="numero">Pagado con crédito</th>
+                <th scope="col" class="numero">Descuentos</th>
+                <th scope="col" class="numero">Puntos canjeados</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of filas; track f.dia) {
+                <tr [class.tabla__cero]="f.compras === 0">
+                  <td>{{ f.dia | date: 'EEE d/MM/y' }}</td>
+                  <td class="numero">{{ f.compras | number }}</td>
+                  <td class="numero">{{ f.facturado | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</td>
+                  <td class="numero">{{ f.credito | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</td>
+                  <td class="numero">{{ f.descuentos | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</td>
+                  <td class="numero">{{ f.puntos | number }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row">Total</th>
+                <td class="numero">{{ t.compras | number }}</td>
+                <td class="numero">{{ t.facturado | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</td>
+                <td class="numero">{{ t.credito | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</td>
+                <td class="numero">{{ t.descuentos | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</td>
+                <td class="numero">{{ t.puntos | number }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p class="reporte__nota">
+          "Facturado" es lo cobrado con dinero. Las devoluciones no lo restan: no reintegran dinero, generan crédito a favor.
+        </p>
+      }
+    </article>
+  }
+
+  <!-- ===================== Entradas vendidas por día ===================== -->
+  @if (pestana() === 'entradas') {
+    @let r = entradas();
+    <article class="reporte" role="tabpanel" aria-label="Entradas vendidas por día">
+      <ng-container *ngTemplateOutlet="filtros; context: { reporte: 'entradas', rango: r.rango, tieneDatos: !!r.filas }" />
+
+      @if (r.error) {
+        <p class="reporte__error" role="alert">{{ r.error }}</p>
+      } @else if (r.filas; as filas) {
+        @let t = totalesEntradas();
+        <div class="reporte__resumen">
+          <div><span>Entradas vendidas</span><strong>{{ t.vendidas | number }}</strong></div>
+          <div><span>Netas (sin devueltas)</span><strong>{{ t.netas | number }}</strong></div>
+          <div><span>Devueltas</span><strong>{{ t.devueltas | number }}</strong></div>
+          <div><span>Promedio por día</span><strong>{{ t.vendidas / filas.length | number: '1.0-1' }}</strong></div>
+        </div>
+
+        <div class="grafico" role="img" [attr.aria-label]="'Entradas vendidas por día, máximo ' + maximoEntradas()">
+          @for (f of filas; track f.dia) {
+            <div class="grafico__columna" [title]="(f.dia | date: 'd/MM') + ': ' + f.vendidas + ' vendidas · ' + f.devueltas + ' devueltas'">
+              <span class="grafico__barra" [style.height.%]="(f.vendidas / maximoEntradas()) * 100">
+                <span class="grafico__devueltas" [style.height.%]="f.vendidas ? (f.devueltas / f.vendidas) * 100 : 0"></span>
+              </span>
+              @if (filas.length <= 31) {
+                <small>{{ f.dia | date: 'd' }}</small>
+              }
+            </div>
+          }
+        </div>
+        <p class="grafico__leyenda"><span class="grafico__muestra"></span> Vendidas <span class="grafico__muestra grafico__muestra--devueltas"></span> Devueltas</p>
+
+        <div class="tabla__contenedor">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col" class="numero">Vendidas</th>
+                <th scope="col" class="numero">Devueltas</th>
+                <th scope="col" class="numero">Netas</th>
+                <th scope="col" class="numero">Con puntos</th>
+                <th scope="col" class="numero">Funciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of filas; track f.dia) {
+                <tr [class.tabla__cero]="f.vendidas === 0">
+                  <td>{{ f.dia | date: 'EEE d/MM/y' }}</td>
+                  <td class="numero">{{ f.vendidas | number }}</td>
+                  <td class="numero">{{ f.devueltas | number }}</td>
+                  <td class="numero"><strong>{{ f.netas | number }}</strong></td>
+                  <td class="numero">{{ f.con_puntos | number }}</td>
+                  <td class="numero">{{ f.funciones | number }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row">Total</th>
+                <td class="numero">{{ t.vendidas | number }}</td>
+                <td class="numero">{{ t.devueltas | number }}</td>
+                <td class="numero">{{ t.netas | number }}</td>
+                <td class="numero">{{ t.con_puntos | number }}</td>
+                <td class="numero">—</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p class="reporte__nota">Se cuentan por el día en que se compraron. "Funciones" son las funciones distintas con ventas ese día.</p>
+      }
+    </article>
+  }
+</section>
+
+<!-- Filtros y descargas: los usan los dos reportes, cada uno con su propio rango -->
+<ng-template #filtros let-reporte="reporte" let-rango="rango" let-tieneDatos="tieneDatos">
+  <form class="filtros" (submit)="$event.preventDefault(); reporte === 'facturacion' ? consultarFacturacion() : consultarEntradas()">
+    <label>
+      <span>Desde</span>
+      <input type="date" [max]="hoy" [value]="rango.desde" (change)="cambiarRango(reporte, 'desde', $any($event.target).value)" />
+    </label>
+    <label>
+      <span>Hasta</span>
+      <input type="date" [max]="hoy" [value]="rango.hasta" (change)="cambiarRango(reporte, 'hasta', $any($event.target).value)" />
+    </label>
+    <button type="submit" class="filtros__ver">Ver reporte</button>
+
+    <div class="filtros__atajos" aria-label="Rangos rápidos">
+      <button type="button" (click)="atajo(reporte, 7)">7 días</button>
+      <button type="button" (click)="atajo(reporte, 30)">30 días</button>
+      <button type="button" (click)="atajo(reporte, 'mes')">Este mes</button>
+    </div>
+
+    <div class="filtros__descargas">
+      <button type="button" class="descarga descarga--pdf" [disabled]="!tieneDatos" (click)="descargar(reporte, 'pdf')">⬇ PDF</button>
+      <button type="button" class="descarga descarga--excel" [disabled]="!tieneDatos" (click)="descargar(reporte, 'excel')">⬇ Excel</button>
+    </div>
+  </form>
+</ng-template>

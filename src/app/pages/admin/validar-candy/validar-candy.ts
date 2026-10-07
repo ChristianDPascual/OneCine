@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
+import { ValidadorQr } from '../../../components/validador-qr/validador-qr';
 
+// Entregar candy: usa el validador del QR único de la compra
 @Component({
-  imports: [],
   selector: 'app-validar-candy',
-  styleUrl: './validar-candy.css',
+  imports: [ValidadorQr],
   templateUrl: './validar-candy.html',
+  styleUrl: './validar-candy.css',
 })
 export class ValidarCandy {}

@@ -1,0 +1,86 @@
+.acciones {
+  display: grid;
+  gap: 0.6rem;
+  width: min(100%, 380px);
+  margin: 0.5rem auto 0;
+}
+
+.acciones__principal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 0;
+  border-radius: 12px;
+  background: var(--one-red);
+  color: var(--cinema-white);
+  font: 700 0.95rem var(--font-title);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.acciones__principal:hover:not(:disabled) {
+  background: var(--one-red-dark);
+  transform: translateY(-1px);
+}
+
+.acciones__principal:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.acciones__fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.acciones__fila--una {
+  grid-template-columns: 1fr;
+}
+
+.acciones__secundario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #3a3a42;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--cinema-white);
+  font: 600 0.85rem var(--font-ui);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.acciones__secundario:hover {
+  border-color: var(--one-red);
+  background: rgb(215 25 32 / 0.1);
+}
+
+/* Invitado sin el comprobante descargado: en gris (el clic muestra la alerta) */
+.acciones__secundario--bloqueado,
+.acciones__secundario--bloqueado:hover {
+  border-color: #2a2a30;
+  background: #1f1f24;
+  color: #6b6b75;
+  cursor: not-allowed;
+}
+
+.acciones__nota {
+  margin: 0;
+  color: var(--cinema-muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .acciones__fila {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,144 @@
+<div class="validador">
+  <!-- ---------- Lectura del QR ---------- -->
+  <section class="validador__lectura" aria-label="Leer el código de la compra">
+    <div class="camara" [class.camara--activa]="escaneando()">
+      <video #video class="camara__video" muted playsinline [hidden]="!escaneando()"></video>
+      @if (escaneando()) {
+        <span class="camara__marco" aria-hidden="true"></span>
+      } @else {
+        <p class="camara__ayuda">Escaneá el QR del comprobante o del celular del cliente.</p>
+      }
+    </div>
+
+    @if (escaneando()) {
+      <button type="button" class="boton validador__boton-sec" (click)="detenerCamara()">Detener cámara</button>
+    } @else {
+      <button type="button" class="boton boton--primario" (click)="iniciarCamara()">📷 Escanear QR</button>
+    }
+
+    <!-- (submit) y no (ngSubmit): este form no tiene [formGroup], y ngSubmit solo lo emiten FormGroupDirective/NgForm -->
+    <form class="validador__manual" (submit)="buscarManual($event)">
+      <label for="codigo-manual">¿No funciona el lector? Ingresá el código</label>
+      <div class="validador__manual-fila">
+        <input id="codigo-manual" type="text" autocomplete="off" placeholder="Ej.: A1B2C3D4E5"
+               [formControl]="codigoManual" (input)="codigoManual.setValue(codigoManual.value.toUpperCase())" />
+        <button type="submit" class="boton boton--primario" [disabled]="procesando()">Buscar</button>
+      </div>
+      @if (codigoManual.touched && codigoManual.invalid) {
+        <p class="campo__error">Ingresá el código de la compra.</p>
+      }
+    </form>
+  </section>
+
+  <!-- ---------- Resultado ---------- -->
+  <section class="validador__resultado" aria-live="polite">
+    @if (mensajeError(); as mensaje) {
+      <p class="validador__mensaje validador__mensaje--error">✕ {{ mensaje }}</p>
+    }
+    @if (mensajeExito(); as mensaje) {
+      <p class="validador__mensaje validador__mensaje--exito">✓ {{ mensaje }}</p>
+    }
+
+    @if (!compra() && !mensajeError() && !mensajeExito()) {
+      <div class="texto-secundario validador__vacio">
+        <span class="validador__vacio-icono" aria-hidden="true">{{ tipo() === 'sala' ? '🎟️' : '🍿' }}</span>
+        <span>Todavía no se leyó ningún código.</span>
+        <small>El resultado de cada lectura aparece acá.</small>
+      </div>
+    }
+  </section>
+</div>
+
+<!-- ---------- Ventana de confirmación: qué se va a canjear en este puesto ---------- -->
+@if (ventanaAbierta()) {
+<!-- Fondo oscuro: tocarlo equivale a "Volver sin usar el QR" -->
+<div class="ventana-fondo" (click)="cerrarVentana()">
+<div class="ventana" role="dialog" aria-modal="true" aria-labelledby="ventana-titulo" [attr.aria-busy]="procesando()"
+     (click)="$event.stopPropagation()">
+  @if (compra(); as c) {
+    <header class="ventana__encabezado">
+      <div>
+        <h2 id="ventana-titulo">
+          @if (canjeado()) {
+            ✓ {{ tipo() === 'sala' ? 'Ingreso validado' : 'Productos entregados' }}
+          } @else {
+            {{ tipo() === 'sala' ? 'Confirmar ingreso a la sala' : 'Confirmar entrega del candy' }}
+          }
+        </h2>
+        <p>Compra <strong>{{ c.codigo }}</strong> · {{ c.invitado ? 'Invitado' : c.cliente }}</p>
+      </div>
+    </header>
+
+    @if (c.estado !== 'pagada') {
+      <p class="validador__mensaje validador__mensaje--error">Compra cancelada: el QR no es válido.</p>
+    }
+    @if (mensajeError(); as mensaje) {
+      <p class="validador__mensaje validador__mensaje--error">✕ {{ mensaje }}</p>
+    }
+
+    <!-- Lo que se canjea en ESTE puesto -->
+    @if (tipo() === 'sala') {
+      @if (c.funcion; as f) {
+        <div class="ventana__bloque ventana__bloque--mio">
+          <p class="ventana__pelicula"><strong>{{ f.pelicula }}</strong> · {{ f.edad_minima > 0 ? '+' + f.edad_minima : 'ATP' }}</p>
+          <p class="texto-secundario">{{ f.inicio | date: "EEEE d/MM · HH:mm" }} hs · Sala {{ f.sala }} ({{ f.formato }})</p>
+          <ul class="ventana__lista">
+            @for (b of c.butacas; track $index) {
+              <li><span>🎟️ Entrada</span><strong>{{ b }}</strong></li>
+            }
+          </ul>
+          <p class="ventana__total">{{ c.butacas.length }} {{ c.butacas.length === 1 ? 'entrada' : 'entradas' }}</p>
+          @if (f.edad_minima > 0) {
+            <p class="ventana__edad">⚠️ +{{ f.edad_minima }}: los menores de {{ f.edad_minima }} años ingresan acompañados de un adulto.</p>
+          }
+        </div>
+      }
+    } @else if (c.items.length > 0) {
+      <div class="ventana__bloque ventana__bloque--mio">
+        <ul class="ventana__lista">
+          @for (i of c.items; track $index) {
+            <li><span>🍿 {{ i.nombre }}</span><strong>× {{ i.cantidad }}</strong></li>
+          }
+        </ul>
+      </div>
+    }
+
+    <!-- La otra parte de la compra (solo informativo) -->
+    @if (tipo() === 'sala' && c.items.length > 0) {
+      <p class="ventana__otra">🍿 También tiene candy: {{ c.validada_candy_at ? 'ya retirado' : 'pendiente de retiro' }}.</p>
+    }
+    @if (tipo() === 'candy' && c.funcion) {
+      <p class="ventana__otra">🎬 También tiene entradas: {{ c.validada_sala_at ? 'ya validadas' : 'pendientes de ingreso' }}.</p>
+    }
+
+    <!-- Por qué no se puede canjear (si no se puede) -->
+    @if (!canjeado() && !puedeCanjear() && c.estado === 'pagada') {
+      <p class="validador__mensaje validador__mensaje--error">
+        @if (!tieneLoMio()) {
+          {{ tipo() === 'sala' ? 'Esta compra no tiene entradas.' : 'Esta compra no tiene productos del candy.' }}
+        } @else {
+          {{ tipo() === 'sala'
+              ? 'Las entradas ya se validaron el ' + (c.validada_sala_at | date: 'd/MM HH:mm') + '.'
+              : 'Los productos ya se entregaron el ' + (c.validada_candy_at | date: 'd/MM HH:mm') + '.' }}
+        }
+      </p>
+    }
+
+    <div class="ventana__acciones">
+      @if (canjeado()) {
+        <button #principal type="button" class="boton boton--primario" (click)="cerrarVentana()">Listo · leer otro código</button>
+      } @else {
+        @if (puedeCanjear()) {
+          <button #principal type="button" class="boton boton--primario" [disabled]="procesando()" (click)="canjear()">
+            ✓ {{ tipo() === 'sala' ? 'Confirmar ingreso (' + c.butacas.length + ')' : 'Confirmar entrega' }}
+          </button>
+        }
+        <button type="button" class="ventana__volver" [disabled]="procesando()" (click)="cerrarVentana()">
+          ← Volver sin usar el QR
+        </button>
+      }
+    </div>
+  }
+</div>
+</div>
+}

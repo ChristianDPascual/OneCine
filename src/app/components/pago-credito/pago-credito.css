@@ -1,0 +1,46 @@
+.credito {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #3a3a42;
+  border-radius: 14px;
+  background: #121216;
+}
+
+.credito__opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.credito__opcion input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--one-red);
+}
+
+.credito__opcion span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.credito__opcion small {
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+}
+
+.credito__opcion--off {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.credito__nota {
+  margin: 0;
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+}
+
+.credito__nota strong {
+  color: var(--cinema-gold);
+}

@@ -26,95 +26,104 @@
     </nav>
   }
 
-  @if (cargando()) {
-    <div class="grilla" aria-busy="true">
-      @for (e of esqueletos; track e) {
-        <div class="esqueleto" aria-hidden="true"></div>
-      }
-    </div>
-  } @else if (sinResultados()) {
-    <div class="candy__vacio">
-      <p class="titulo-pelicula">{{ busqueda() ? 'No encontramos nada con ese nombre' : 'El candy bar todavía no tiene productos' }}</p>
-      @if (busqueda()) {
-        <p class="texto-secundario">Probá con otra palabra.</p>
-      }
-    </div>
-  } @else {
-    <!-- ---------- Combos ---------- -->
-    @if (combosVisibles().length > 0) {
-      <section id="combos" class="seccion" aria-labelledby="titulo-combos">
-        <h2 id="titulo-combos" class="seccion__titulo">Combos</h2>
+  <!-- Tu pedido: debajo de los filtros y arriba de los combos (aparece al agregar algo) -->
+  <app-carrito-resumen />
 
-        <div class="grilla grilla--combos">
-          @for (combo of combosVisibles(); track combo.id) {
-            @let ahorroCombo = ahorro(combo);
-            <article class="combo" [class.combo--destacado]="combo.destacado">
-              <div class="combo__imagen">
-                @if (combo.imagen_url) {
-                  <img [src]="combo.imagen_url" [alt]="combo.nombre" loading="lazy" />
-                } @else {
-                  <span class="sin-imagen">🍿</span>
-                }
-                <div class="insignias">
-                  @if (combo.destacado) { <span class="insignia insignia--dorada">★ Destacado</span> }
-                  @if (combo.incluye_entrada) { <span class="insignia insignia--roja">Incluye entrada</span> }
-                </div>
-              </div>
+  <div class="candy__contenido">
+    @if (cargando()) {
+      <div class="grilla" aria-busy="true">
+        @for (e of esqueletos; track e) {
+          <div class="esqueleto" aria-hidden="true"></div>
+        }
+      </div>
+    } @else if (sinResultados()) {
+      <div class="candy__vacio">
+        <p class="titulo-pelicula">{{ busqueda() ? 'No encontramos nada con ese nombre' : 'El candy bar todavía no tiene productos' }}</p>
+        @if (busqueda()) {
+          <p class="texto-secundario">Probá con otra palabra.</p>
+        }
+      </div>
+    } @else {
+      <!-- ---------- Combos ---------- -->
+      @if (combosVisibles().length > 0) {
+        <section id="combos" class="seccion" aria-labelledby="titulo-combos">
+          <h2 id="titulo-combos" class="seccion__titulo">Combos</h2>
 
-              <div class="combo__info">
-                <h3 class="combo__nombre">{{ combo.nombre }}</h3>
-                @if (combo.descripcion) {
-                  <p class="combo__descripcion">{{ combo.descripcion }}</p>
-                }
-                <ul class="combo__contenido">
-                  @for (linea of contenido(combo); track $index) {
-                    <li>{{ linea }}</li>
+          <div class="grilla grilla--combos">
+            @for (combo of combosVisibles(); track combo.id) {
+              @let ahorroCombo = ahorro(combo);
+              <article class="combo" [class.combo--destacado]="combo.destacado">
+                <div class="combo__imagen">
+                  @if (combo.imagen_url) {
+                    <img [src]="combo.imagen_url" [alt]="combo.nombre" loading="lazy" />
+                  } @else {
+                    <span class="sin-imagen">🍿</span>
                   }
-                </ul>
-                <div class="combo__precios">
-                  <span class="precio">{{ combo.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
-                  @if (ahorroCombo > 0) {
-                    <span class="ahorro">Ahorrás {{ ahorroCombo | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</span>
-                  }
-                </div>
-              </div>
-            </article>
-          }
-        </div>
-      </section>
-    }
-
-    <!-- ---------- Productos por categoría ---------- -->
-    @for (seccion of secciones(); track seccion.id) {
-      <section [id]="seccion.id" class="seccion" [attr.aria-labelledby]="'titulo-' + seccion.id">
-        <h2 [id]="'titulo-' + seccion.id" class="seccion__titulo">{{ seccion.titulo }}</h2>
-
-        <div class="grilla">
-          @for (producto of seccion.productos; track producto.id) {
-            <article class="producto">
-              <div class="producto__imagen">
-                @if (producto.imagen_url) {
-                  <img [src]="producto.imagen_url" [alt]="producto.nombre" loading="lazy" />
-                } @else {
-                  <span class="sin-imagen">🥤</span>
-                }
-                @if (auth.logueado() && producto.puntos_canje) {
                   <div class="insignias">
-                    <span class="insignia insignia--dorada">Canjeable · {{ producto.puntos_canje | number }} pts</span>
+                    @if (combo.destacado) { <span class="insignia insignia--dorada">★ Destacado</span> }
+                    @if (combo.incluye_entrada) { <span class="insignia insignia--roja">Incluye entrada</span> }
                   </div>
-                }
-              </div>
-              <div class="producto__info">
-                <h3 class="producto__nombre">{{ producto.nombre }}</h3>
-                @if (producto.descripcion) {
-                  <p class="producto__descripcion">{{ producto.descripcion }}</p>
-                }
-                <span class="precio">{{ producto.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
-              </div>
-            </article>
-          }
-        </div>
-      </section>
+                </div>
+
+                <div class="combo__info">
+                  <h3 class="combo__nombre">{{ combo.nombre }}</h3>
+                  @if (combo.descripcion) {
+                    <p class="combo__descripcion">{{ combo.descripcion }}</p>
+                  }
+                  <ul class="combo__contenido">
+                    @for (linea of contenido(combo); track $index) {
+                      <li>{{ linea }}</li>
+                    }
+                  </ul>
+                  <div class="combo__precios">
+                    <span class="precio">{{ combo.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+                    @if (ahorroCombo > 0) {
+                      <span class="ahorro">Ahorrás {{ ahorroCombo | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</span>
+                    }
+                  </div>
+                  <app-contador [cantidad]="carrito.cantidad('combo', combo.id)" [nombre]="combo.nombre"
+                                (cambiar)="cambiarCombo(combo, $event)" />
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- ---------- Productos por categoría ---------- -->
+      @for (seccion of secciones(); track seccion.id) {
+        <section [id]="seccion.id" class="seccion" [attr.aria-labelledby]="'titulo-' + seccion.id">
+          <h2 [id]="'titulo-' + seccion.id" class="seccion__titulo">{{ seccion.titulo }}</h2>
+
+          <div class="grilla">
+            @for (producto of seccion.productos; track producto.id) {
+              <article class="producto">
+                <div class="producto__imagen">
+                  @if (producto.imagen_url) {
+                    <img [src]="producto.imagen_url" [alt]="producto.nombre" loading="lazy" />
+                  } @else {
+                    <span class="sin-imagen">🥤</span>
+                  }
+                  @if (auth.logueado() && producto.puntos_canje) {
+                    <div class="insignias">
+                      <span class="insignia insignia--dorada">Canjeable · {{ producto.puntos_canje | number }} pts</span>
+                    </div>
+                  }
+                </div>
+                <div class="producto__info">
+                  <h3 class="producto__nombre">{{ producto.nombre }}</h3>
+                  @if (producto.descripcion) {
+                    <p class="producto__descripcion">{{ producto.descripcion }}</p>
+                  }
+                  <span class="precio">{{ producto.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+                  <app-contador [cantidad]="carrito.cantidad('producto', producto.id)" [nombre]="producto.nombre"
+                                (cambiar)="cambiarProducto(producto, $event)" />
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
     }
-  }
+  </div>
 </section>

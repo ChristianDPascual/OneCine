@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { Puntuacion, Resena, ResenasDePelicula } from '../models/resena.model';
+import { MiResena, Puntuacion, Resena, ResenasDePelicula } from '../models/resena.model';
 
 const MAXIMO_RESENAS = 20;
 
@@ -40,5 +40,35 @@ export class ResenasService {
       puntuacion: datos && datos.cantidad > 0 ? { promedio: Number(datos.promedio), cantidad: datos.cantidad } : null,
       resenas: resenas.data as Resena[],
     };
+  }
+
+  // ---------- Reseña del cliente registrado ----------
+
+  // Mi calificación de la película (null si todavía no califiqué)
+  async miResena(peliculaId: number): Promise<MiResena | null> {
+    const { data, error } = await this.supabase.client.rpc('mi_resena', { p_pelicula: peliculaId });
+    if (error) {
+      throw error;
+    }
+    return (data as MiResena | null) ?? null;
+  }
+
+  // Califica o actualiza la calificación (la base valida: cliente registrado, 1 a 5, 100 caracteres)
+  async guardar(peliculaId: number, estrellas: number, comentario: string | null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('guardar_resena', {
+      p_pelicula: peliculaId,
+      p_estrellas: estrellas,
+      p_comentario: comentario,
+    });
+    if (error) {
+      throw error;
+    }
+  }
+
+  async eliminar(peliculaId: number): Promise<void> {
+    const { error } = await this.supabase.client.rpc('eliminar_resena', { p_pelicula: peliculaId });
+    if (error) {
+      throw error;
+    }
   }
 }

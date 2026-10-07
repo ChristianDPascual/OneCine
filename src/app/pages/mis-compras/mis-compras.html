@@ -1,0 +1,204 @@
+<section class="mis-compras">
+  <header class="mis-compras__encabezado">
+    <span class="etiqueta-cine">Tu cuenta</span>
+    <h1 class="titulo-seccion">Mis compras</h1>
+    <p class="texto-secundario">Cada compra tiene un solo QR: sirve para entrar a la sala y para retirar en el candy bar.</p>
+  </header>
+
+  @if (mensajeError(); as mensaje) {
+    <app-alerta titulo="Ocurrió un problema" [mensaje]="mensaje" (cerrar)="mensajeError.set(null)" />
+  }
+  @if (mensajeExito(); as mensaje) {
+    <app-alerta tipo="exito" titulo="Devolución realizada" [mensaje]="mensaje" (cerrar)="mensajeExito.set(null)" />
+  }
+
+  <div class="pestanas" role="tablist" aria-label="Mis compras">
+    <button type="button" role="tab" class="pestana" [class.activa]="pestana() === 'activas'"
+            [attr.aria-selected]="pestana() === 'activas'" (click)="pestana.set('activas')">
+      Activas ({{ activas().length }})
+    </button>
+    <button type="button" role="tab" class="pestana" [class.activa]="pestana() === 'historial'"
+            [attr.aria-selected]="pestana() === 'historial'" (click)="pestana.set('historial')">
+      Historial ({{ historial().length }})
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <div class="esqueleto" aria-hidden="true"></div>
+  } @else {
+    <div class="lista">
+      @for (t of visibles(); track t.compra.id) {
+        <article class="compra" [class.compra--pasada]="pestana() === 'historial'">
+          <!-- Portada: póster de la película o, si es solo candy, una portada propia.
+               Ocupa todo el alto de la tarjeta, así todas tienen la misma estructura -->
+          <div class="compra__portada" [class.compra__portada--candy]="!t.imagen">
+            @if (t.imagen) {
+              <!-- Fondo: el mismo póster desenfocado, para que no queden bandas vacías -->
+              <img class="compra__portada-fondo" [src]="t.imagen" alt="" aria-hidden="true" loading="lazy" />
+              <!-- Póster completo, sin recortes -->
+              <img class="compra__portada-poster" [src]="t.imagen" [alt]="'Póster de ' + t.titulo" loading="lazy" />
+            } @else {
+              <span aria-hidden="true">🍿</span>
+            }
+          </div>
+
+          <!-- Datos de la compra -->
+          <div class="compra__info">
+            <div class="compra__datos">
+              <h2 class="compra__titulo">{{ t.titulo }}</h2>
+
+              @if (t.funcion) {
+                <p class="compra__cuando">{{ t.funcion | date: "EEEE d 'de' MMMM · HH:mm" }} hs</p>
+                <p class="texto-secundario">{{ t.sala }}</p>
+                <ul class="compra__butacas" aria-label="Butacas">
+                  @for (b of t.butacas; track b.etiqueta) {
+                    <li [class.vip]="b.vip">{{ b.etiqueta }}</li>
+                  }
+                </ul>
+                @if (t.edadMinima > 0) {
+                  <p class="compra__edad">
+                    ⚠️ {{ t.edadMinima | clasificacion }}: los menores de {{ t.edadMinima }} años deben ingresar con un adulto.
+                  </p>
+                }
+              } @else {
+                <p class="compra__cuando">Comprado el {{ t.cuando | date: "EEEE d 'de' MMMM · HH:mm" }} hs</p>
+              }
+
+              <!-- Listados desplegables: entradas y candy, cada ítem con su botón "Devolver" -->
+              @if (t.entradasDetalle.length > 0 || t.candyDetalle.length > 0) {
+                <div class="desplegables">
+                  @if (t.entradasDetalle.length > 0) {
+                    <button type="button" class="compra__ver" [attr.aria-expanded]="desplegados().has(t.compra.id + '-entradas')"
+                            [attr.aria-controls]="'entradas-' + t.compra.id" (click)="alternar(t.compra.id + '-entradas')">
+                      🎟️ {{ desplegados().has(t.compra.id + '-entradas') ? 'Ocultar' : 'Ver' }} entradas ({{ t.entradasDetalle.length }})
+                      <span class="compra__ver-flecha" [class.abierta]="desplegados().has(t.compra.id + '-entradas')" aria-hidden="true">▾</span>
+                    </button>
+                  }
+                  @if (t.candyDetalle.length > 0) {
+                    <button type="button" class="compra__ver" [attr.aria-expanded]="desplegados().has(t.compra.id + '-candy')"
+                            [attr.aria-controls]="'candy-' + t.compra.id" (click)="alternar(t.compra.id + '-candy')">
+                      🍿 {{ desplegados().has(t.compra.id + '-candy') ? 'Ocultar' : 'Ver' }} productos del candy ({{ t.candyDetalle.length }})
+                      <span class="compra__ver-flecha" [class.abierta]="desplegados().has(t.compra.id + '-candy')" aria-hidden="true">▾</span>
+                    </button>
+                  }
+                </div>
+
+                @if (desplegados().has(t.compra.id + '-entradas')) {
+                  <ng-container *ngTemplateOutlet="listado; context: { t: t, items: t.entradasDetalle, id: 'entradas-' + t.compra.id, titulo: 'Entradas' }" />
+                }
+                @if (desplegados().has(t.compra.id + '-candy')) {
+                  <ng-container *ngTemplateOutlet="listado; context: { t: t, items: t.candyDetalle, id: 'candy-' + t.compra.id, titulo: 'Productos del candy' }" />
+                }
+              }
+
+              <!-- Qué se canjeó y qué falta -->
+              <ul class="canjes">
+                @if (t.tieneEntradas) {
+                  <li [class.hecho]="!!t.compra.validada_sala_at">
+                    🎬 Entradas:
+                    @if (t.compra.validada_sala_at) { validadas el {{ t.compra.validada_sala_at | date: 'd/MM HH:mm' }} }
+                    @else { pendientes de ingreso }
+                  </li>
+                }
+                @if (t.tieneCandy) {
+                  <li [class.hecho]="!!t.compra.validada_candy_at">
+                    🍿 Candy:
+                    @if (t.compra.validada_candy_at) { retirado el {{ t.compra.validada_candy_at | date: 'd/MM HH:mm' }} }
+                    @else { pendiente de retiro }
+                  </li>
+                }
+              </ul>
+
+              @if (t.devueltos.length > 0) {
+                <p class="devolver__hechos">↩ Devuelto: {{ t.devueltos.join(' · ') }}</p>
+              }
+
+              <p class="compra__pie">
+                Compra <strong>{{ t.compra.codigo }}</strong> · {{ t.compra.total | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}
+                @if (t.compra.credito_usado > 0) { + {{ t.compra.credito_usado | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }} de crédito }
+                @if (t.compra.puntos_usados > 0) { + {{ t.compra.puntos_usados }} pts }
+                · {{ etiquetaEstado(t) }}
+              </p>
+            </div>
+          </div>
+
+          <!-- QR único -->
+          <div class="compra__qrs compra__qrs--unico">
+            <span class="estado" [class.estado--qr-vigente]="t.estadoQr === 'vigente'"
+                  [class.estado--qr-parcial]="t.estadoQr === 'parcial'"
+                  [class.estado--usado]="t.estadoQr === 'usado'"
+                  [class.estado--cancelada]="t.estadoQr === 'anulado'">
+              {{ etiquetasQr[t.estadoQr] }}
+            </span>
+
+            @if (t.estadoQr === 'vigente' || t.estadoQr === 'parcial') {
+              <button type="button" class="qr__boton" (click)="ampliado.set({ valor: qrCompra(t.compra.codigo), titulo: t.titulo + ' · ' + t.compra.codigo })"
+                      aria-label="Ampliar QR de la compra">
+                <app-codigo-qr [valor]="qrCompra(t.compra.codigo)" [tamano]="130" descripcion="QR de la compra" />
+              </button>
+              <span class="qr__ayuda">Tocá para ampliar</span>
+            }
+
+            <button type="button" class="compra__pdf" [disabled]="descargando() === t.compra.id" (click)="descargar(t)">
+              ⬇ {{ descargando() === t.compra.id ? 'Generando…' : t.tieneEntradas ? 'Descargar entradas' : 'Descargar comprobante' }}
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <div class="vacio">
+          @if (pestana() === 'activas') {
+            <p class="titulo-pelicula">No tenés compras para usar</p>
+            <a routerLink="/cartelera" class="vacio__boton">Ver la cartelera</a>
+          } @else {
+            <p class="titulo-pelicula">Todavía no tenés compras anteriores</p>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<!-- QR ampliado para mostrar en boletería o en el candy -->
+@if (ampliado(); as a) {
+  <div class="ampliado" role="dialog" aria-modal="true" [attr.aria-label]="a.titulo" (click)="ampliado.set(null)">
+    <div class="ampliado__caja" (click)="$event.stopPropagation()">
+      <p class="ampliado__titulo">{{ a.titulo }}</p>
+      <app-codigo-qr [valor]="a.valor" [tamano]="280" [descripcion]="a.titulo" />
+      <button type="button" class="ampliado__cerrar" (click)="ampliado.set(null)">Cerrar</button>
+    </div>
+  </div>
+}
+
+<!-- Listado de entradas o productos con "Devolver" (lo usan los dos desplegables) -->
+<ng-template #listado let-t="t" let-items="items" let-id="id" let-titulo="titulo">
+  <div class="devolver" [id]="id">
+    <p class="devolver__titulo">
+      {{ titulo }}
+      @if (t.compra.estado === 'pagada') {
+        @if (t.limiteDevolucion) {
+          <small>devolución hasta el {{ t.limiteDevolucion | date: "d/MM 'a las' HH:mm" }} hs · se acredita como crédito</small>
+        } @else {
+          <small>devolución hasta que retires el pedido · se acredita como crédito</small>
+        }
+      }
+    </p>
+    <ul class="devolver__lista">
+      @for (d of items; track d.tipo + d.id) {
+        <li>
+          <span>
+            {{ d.etiqueta }}
+            @if (d.conPuntos) { <small>⭐ con puntos</small> }
+            @if (d.extra) { <small>+ {{ d.extra }}</small> }
+          </span>
+          @if (d.puedeDevolver) {
+            <button type="button" class="devolver__boton" [disabled]="devolviendo()" (click)="devolver(t, d)">
+              Devolver
+            </button>
+          } @else if (d.motivo) {
+            <small class="devolver__motivo">{{ d.motivo }}</small>
+          }
+        </li>
+      }
+    </ul>
+  </div>
+</ng-template>

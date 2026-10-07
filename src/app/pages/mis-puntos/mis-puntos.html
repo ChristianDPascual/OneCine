@@ -1,4 +1,67 @@
 <section class="pagina-cuenta">
   <span class="etiqueta-cine">Mi cuenta</span>
   <h1 class="titulo-seccion">Mis puntos</h1>
+
+  @if (error()) {
+    <div class="puntos-vacio">
+      <p>No pudimos cargar tus puntos.</p>
+      <button type="button" class="boton boton--primario" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else if (resumen(); as r) {
+    <!-- ---------- Saldo ---------- -->
+    <div class="puntos-saldo">
+      <div>
+        <span class="puntos-saldo__etiqueta">Puntos disponibles</span>
+        <strong class="puntos-saldo__valor">{{ r.disponibles | number }}</strong>
+      </div>
+      <ul class="puntos-saldo__reglas">
+        @if (puntosPorPeso(); as p) {
+          <li>Sumás <strong>{{ p | number: '1.0-2' }}</strong> {{ p === 1 ? 'punto' : 'puntos' }} por cada $1 que pagás.</li>
+        }
+        @if (puntosEntrada(); as e) {
+          <li>Una entrada se canjea por <strong>{{ e | number }}</strong> puntos.</li>
+        }
+        <li>Los productos del candy muestran sus puntos en el <a routerLink="/candy">Candy bar</a>.</li>
+      </ul>
+    </div>
+
+    <!-- ---------- Historial ---------- -->
+    <h2 class="puntos-historial__titulo">Historial de movimientos</h2>
+
+    @if (r.movimientos.length === 0) {
+      <div class="puntos-vacio">
+        <p>Todavía no tenés movimientos. Cada compra que pagues te suma puntos.</p>
+        <a routerLink="/cartelera" class="boton boton--primario">Ver cartelera</a>
+      </div>
+    } @else {
+      <div class="puntos-tabla__contenedor">
+        <table class="puntos-tabla">
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Concepto</th>
+              <th scope="col" class="numero">Obtenidos</th>
+              <th scope="col" class="numero">Utilizados</th>
+              <th scope="col" class="numero">Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of r.movimientos; track m.id) {
+              <tr>
+                <td data-titulo="Fecha">{{ m.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td data-titulo="Concepto">{{ m.concepto }}</td>
+                <td data-titulo="Obtenidos" class="numero puntos-tabla__mas">
+                  {{ m.obtenidos > 0 ? '+' + (m.obtenidos | number) : '—' }}
+                </td>
+                <td data-titulo="Utilizados" class="numero puntos-tabla__menos">
+                  {{ m.utilizados > 0 ? '-' + (m.utilizados | number) : '—' }}
+                </td>
+                <td data-titulo="Saldo" class="numero"><strong>{{ m.saldo | number }}</strong></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
 </section>

@@ -1,6 +1,6 @@
-import { Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Component, DestroyRef, HostListener, OnInit, computed, inject, input, signal } from '@angular/core';
+import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { ComprasService } from '../../core/services/compras.service';
 import { SalasService } from '../../core/services/salas.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
@@ -8,6 +8,9 @@ import { ProductosService } from '../../core/services/productos.service';
 import { CombosService } from '../../core/services/combos.service';
 import { CategoriasProductoService } from '../../core/services/categorias-producto.service';
 import { LoadingService } from '../../core/services/loading.service';
+import { CarritoService } from '../../core/services/carrito.service';
+import { AuthService } from '../../core/services/auth.service';
+import { ComprobanteService } from '../../core/services/comprobante.service';
 import {
   CompraConfirmada,
   DescuentoAplicable,
@@ -15,16 +18,21 @@ import {
   FuncionDeCompra,
   ItemCompra,
   MAXIMO_BUTACAS,
+  OpcionCanje,
   esError,
   mensajeErrorCompra,
-  qrCandy,
-  qrSala,
+  qrCompra,
 } from '../../core/models/compra.model';
 import { BLOQUES, BloqueButaca, Butaca, ETIQUETAS_BLOQUE, ETIQUETAS_TIPO_BUTACA } from '../../core/models/sala.model';
 import { Producto } from '../../core/models/producto.model';
 import { ComboAdmin } from '../../core/models/combo.model';
 import { Alerta } from '../../components/alerta/alerta';
 import { CodigoQr } from '../../components/codigo-qr/codigo-qr';
+import { ClasificacionPipe } from '../../pipes/clasificacion.pipe';
+import { PagoPuntos } from '../../components/pago-puntos/pago-puntos';
+import { PagoCredito } from '../../components/pago-credito/pago-credito';
+import { AccionesCompra } from '../../components/acciones-compra/acciones-compra';
+import { ConComprobantePendiente, ConPedidoEnCurso } from '../../core/guards/salir-del-pedido.guard';
 
 type Paso = 'butacas' | 'candy' | 'pago' | 'listo';
 
@@ -42,11 +50,11 @@ const AVISO_RESERVADA = 'Esta butaca ya se encuentra reservada, por favor elija 
 
 @Component({
   selector: 'app-compra',
-  imports: [CurrencyPipe, DatePipe, RouterLink, Alerta, CodigoQr],
+  imports: [CurrencyPipe, DatePipe, DecimalPipe, RouterLink, Alerta, CodigoQr, ClasificacionPipe, PagoPuntos, PagoCredito, AccionesCompra],
   templateUrl: './compra.html',
   styleUrl: './compra.css',
 })
-export class Compra implements OnInit {
+export class Compra implements OnInit, ConPedidoEnCurso, ConComprobantePendiente {
   // Parámetro :funcion de /comprar/:funcion
   readonly funcion = input.required<string>();
 
@@ -57,6 +65,11 @@ export class Compra implements OnInit {
   private readonly combosService = inject(CombosService);
   private readonly categoriasService = inject(CategoriasProductoService);
   private readonly loading = inject(LoadingService);
+  // Carrito compartido con /candy: si eligió combos antes de la función, ya vienen cargados
+  private readonly carrito = inject(CarritoService);
+
+  // Vino desde el Candy bar con el pedido armado: butacas → pago (sin el paso del candy)
+  protected readonly pedidoDelCandy = this.carrito.pedidoDelCandy;
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly paso = signal<Paso>('butacas');
@@ -85,7 +98,16 @@ export class Compra implements OnInit {
   private readonly combos = signal<ComboAdmin[]>([]);
   private readonly productos = signal<Producto[]>([]);
   private readonly categorias = signal<{ id: number; nombre: string }[]>([]);
-  private readonly carrito = signal(new Map<string, number>()); // 'combo-3' → 2
+
+  // ---------- Puntos (solo clientes registrados) ----------
+  protected readonly saldoPuntos = signal<number | null>(null);
+  private readonly puntosEntrada = signal(0);
+  // 'entrada' | 'producto-12' → unidades pagadas con puntos
+  protected readonly seleccionPuntos = signal<Record<string, number>>({});
+
+  // ---------- Crédito a favor (solo clientes registrados) ----------
+  protected readonly saldoCredito = signal<number | null>(null);
+  protected readonly usarCredito = signal(false);
 
   // ---------- Pago ----------
   protected readonly metodoPago = signal<'credito' | 'debito' | 'mercadopago'>('credito');
@@ -94,8 +116,41 @@ export class Compra implements OnInit {
   // Lo comprado, para mostrarlo en la pantalla final (las reservas ya no existen)
   protected readonly butacasCompradas = signal<Butaca[]>([]);
   protected readonly candyComprado = signal<{ nombre: string; cantidad: number }[]>([]);
-  protected readonly qrSala = qrSala;
-  protected readonly qrCandy = qrCandy;
+  // Un solo QR por compra: entradas + candy
+  protected readonly qrCompra = qrCompra;
+
+  // Invitado (sesión anónima): sin descuentos ni puntos, y tiene que declarar la edad
+  protected readonly auth = inject(AuthService);
+  private readonly comprobante = inject(ComprobanteService);
+  protected readonly declaraEdad = signal(false);
+  // Cliente registrado más chico que la edad mínima: puede comprar, pero tiene que venir con un adulto
+  protected readonly menorDeEdad = signal(false);
+  // Invitado (no sabemos su edad) o cliente menor: tiene que aceptar la condición antes de pagar
+  protected readonly requiereDeclaracion = computed(() => {
+    const edad = this.datos()?.pelicula.edad_minima ?? 0;
+    return edad > 0 && (this.auth.esInvitado() || this.menorDeEdad());
+  });
+  protected readonly descargando = signal(false);
+  protected readonly descargado = signal(false);
+  private readonly router = inject(Router);
+
+  // Invitado que ya pagó y todavía no descargó el PDF (lo usa el guard de salida)
+  comprobantePendiente(): boolean {
+    return this.paso() === 'listo' && this.auth.esInvitado() && !this.descargado();
+  }
+
+  // Cerrar o recargar la pestaña sin el PDF: el navegador muestra su propio aviso
+  @HostListener('window:beforeunload', ['$event'])
+  protected alCerrarPestana(evento: BeforeUnloadEvent): void {
+    if (this.comprobantePendiente()) {
+      evento.preventDefault();
+    }
+  }
+
+  // "Volver al inicio": si falta el PDF, el guard muestra la alerta y no deja salir
+  protected volverAlInicio(): void {
+    this.router.navigateByUrl('/');
+  }
 
   // =====================================================================
   // Derivados
@@ -156,7 +211,7 @@ export class Compra implements OnInit {
   });
 
   protected cantidad(tipo: 'producto' | 'combo', id: number): number {
-    return this.carrito().get(`${tipo}-${id}`) ?? 0;
+    return this.carrito.cantidad(tipo, id);
   }
 
   // Cada combo con entrada cubre una butaca: no puede haber más que butacas elegidas
@@ -186,11 +241,71 @@ export class Compra implements OnInit {
   );
   protected readonly totalCandy = computed(() => this.lineasCandy().reduce((t, l) => t + l.precio * l.cantidad, 0));
   protected readonly subtotal = computed(() => this.totalEntradas() + this.totalCandy());
+
+  // ---------- Canje con puntos (misma regla que la base) ----------
+
+  // Butacas que se pagan (las primeras por id las cubren los combos), de la más cara a la más barata
+  private readonly entradasCanjeables = computed(() =>
+    [...this.mias()]
+      .sort((a, b) => a.id - b.id)
+      .slice(this.entradasCubiertas())
+      .map(b => this.precioEntrada() + (b.tipo === 'vip' ? this.recargoVip() : 0))
+      .sort((a, b) => b - a),
+  );
+
+  protected readonly opcionesCanje = computed<OpcionCanje[]>(() => {
+    const opciones: OpcionCanje[] = [];
+    const entradas = this.entradasCanjeables().length;
+    if (entradas > 0 && this.puntosEntrada() > 0) {
+      opciones.push({ clave: 'entrada', nombre: 'Entrada', puntos: this.puntosEntrada(), maximo: entradas });
+    }
+    for (const l of this.lineasCandy()) {
+      const puntos = l.tipo === 'producto' ? this.productos().find(p => p.id === l.id)?.puntos_canje : null;
+      if (puntos) {
+        opciones.push({ clave: `producto-${l.id}`, nombre: l.nombre, puntos, maximo: l.cantidad });
+      }
+    }
+    return opciones;
+  });
+
+  private cargarCredito(): void {
+    this.compras.misCreditos()
+      .then(r => this.saldoCredito.set(Number(r.disponible)))
+      .catch(() => this.saldoCredito.set(null));
+  }
+
+  // Unidades canjeadas, recortadas por si después se quitaron butacas o productos
+  private canjeadas(clave: string): number {
+    const opcion = this.opcionesCanje().find(o => o.clave === clave);
+    return opcion ? Math.min(this.seleccionPuntos()[clave] ?? 0, opcion.maximo) : 0;
+  }
+
+  protected readonly puntosUsados = computed(() =>
+    this.opcionesCanje().reduce((t, o) => t + this.canjeadas(o.clave) * o.puntos, 0),
+  );
+
+  // Pesos que se dejan de pagar porque van con puntos
+  protected readonly valorCanjeado = computed(() => {
+    const entradas = this.entradasCanjeables().slice(0, this.canjeadas('entrada')).reduce((t, p) => t + p, 0);
+    const candy = this.lineasCandy()
+      .filter(l => l.tipo === 'producto')
+      .reduce((t, l) => t + this.canjeadas(`producto-${l.id}`) * l.precio, 0);
+    return entradas + candy;
+  });
+
+  // El descuento se aplica sobre lo que se paga con dinero
+  protected readonly aPagarConDinero = computed(() => this.subtotal() - this.valorCanjeado());
   protected readonly montoDescuento = computed(() => {
     const descuento = this.descuento();
-    return descuento ? Math.round(this.subtotal() * descuento.porcentaje) / 100 : 0;
+    return descuento ? Math.round(this.aPagarConDinero() * descuento.porcentaje) / 100 : 0;
   });
-  protected readonly total = computed(() => this.subtotal() - this.montoDescuento());
+  // Después de puntos y descuento: lo que se cubre con crédito y/o dinero
+  protected readonly aPagarAntesCredito = computed(() => this.aPagarConDinero() - this.montoDescuento());
+  protected readonly creditoAplicado = computed(() =>
+    this.usarCredito() ? Math.min(this.saldoCredito() ?? 0, this.aPagarAntesCredito()) : 0,
+  );
+  // Lo que se paga con DINERO (sobre esto se ganan puntos)
+  protected readonly total = computed(() => this.aPagarAntesCredito() - this.creditoAplicado());
 
   protected readonly combosExcedidos = computed(() => this.combosConEntrada() > this.mias().length);
 
@@ -234,6 +349,13 @@ export class Compra implements OnInit {
         return;
       }
 
+      // Edad mínima: un cliente registrado menor PUEDE comprar, pero tiene que ingresar con un adulto
+      // (se le muestra el aviso y tiene que aceptarlo, igual que el invitado)
+      const edad = funcion.pelicula.edad_minima;
+      if (edad > 0 && this.auth.logueado()) {
+        this.menorDeEdad.set(!(await this.compras.puedoComprar(id).catch(() => true)));
+      }
+
       const [butacas, configuracion, combos, productos, categorias, descuento] = await Promise.all([
         this.salas.butacas(funcion.sala.id),
         this.configuracion.obtener().catch(() => null),
@@ -250,6 +372,15 @@ export class Compra implements OnInit {
       this.productos.set(productos);
       this.categorias.set(categorias);
       this.descuento.set(descuento);
+      this.puntosEntrada.set(configuracion?.puntos_entrada_gratis ?? 0);
+
+      // Saldo de puntos y de crédito: solo clientes registrados
+      if (this.auth.logueado()) {
+        this.compras.misPuntos()
+          .then(r => this.saldoPuntos.set(r.disponibles))
+          .catch(() => this.saldoPuntos.set(null));
+        this.cargarCredito();
+      }
 
       await this.recargarEstado();
 
@@ -397,17 +528,18 @@ export class Compra implements OnInit {
     if (diferencia > 0 && incluyeEntrada && this.combosConEntrada() >= this.mias().length) {
       return; // no más combos con entrada que butacas
     }
-    const nueva = Math.max(0, Math.min(20, actual + diferencia));
+    if (diferencia < 0 && actual === 0) {
+      return;
+    }
 
-    this.carrito.update(carrito => {
-      const nuevo = new Map(carrito);
-      if (nueva === 0) {
-        nuevo.delete(`${tipo}-${id}`);
-      } else {
-        nuevo.set(`${tipo}-${id}`, nueva);
-      }
-      return nuevo;
-    });
+    const base = tipo === 'combo' ? this.combos().find(c => c.id === id) : this.productos().find(p => p.id === id);
+    if (!base) {
+      return;
+    }
+    this.carrito.cambiar(
+      { tipo, id, nombre: base.nombre, precio: base.precio, incluyeEntrada: tipo === 'combo' && incluyeEntrada },
+      diferencia,
+    );
   }
 
   protected puedeSumarComboConEntrada(): boolean {
@@ -423,6 +555,12 @@ export class Compra implements OnInit {
       this.aviso.set('Elegí al menos una butaca para continuar.');
       return;
     }
+    // Combos con entrada elegidos en /candy: cada uno necesita una butaca
+    if ((paso === 'candy' || (paso === 'pago' && this.paso() === 'butacas')) && this.combosExcedidos()) {
+      const n = this.combosConEntrada();
+      this.aviso.set(`Tenés ${n} ${n === 1 ? 'combo' : 'combos'} con entrada: elegí al menos ${n} ${n === 1 ? 'butaca' : 'butacas'}.`);
+      return;
+    }
     if (paso === 'pago' && this.combosExcedidos()) {
       this.aviso.set('Tenés más combos con entrada que butacas elegidas.');
       return;
@@ -432,6 +570,16 @@ export class Compra implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // Para el guard: si se va con butacas elegidas sin pagar, se le pregunta
+  pedidoEnCurso(): boolean {
+    return this.paso() !== 'listo' && this.mias().length > 0;
+  }
+
+  // Botón "Continuar" de las butacas
+  protected siguiente(): void {
+    this.irA(this.pedidoDelCandy() ? 'pago' : 'candy');
+  }
+
   protected async cancelar(): Promise<void> {
     const funcion = this.datos();
     if (!funcion) {
@@ -439,14 +587,52 @@ export class Compra implements OnInit {
     }
     this.loading.mostrar();
     try {
+      // Se liberan las butacas; el carrito del candy se conserva
       await this.compras.liberarTodas(funcion.id);
-      this.carrito.set(new Map());
       this.vence.set(null);
       this.paso.set('butacas');
       await this.recargarEstado();
       this.aviso.set('Liberaste tus butacas.');
     } finally {
       this.loading.ocultar();
+    }
+  }
+
+  // =====================================================================
+  // Comprobante en PDF (con el QR único)
+  // =====================================================================
+
+  async descargarComprobante(): Promise<void> {
+    const compra = this.compra();
+    const funcion = this.datos();
+    if (!compra || !funcion || this.descargando()) {
+      return;
+    }
+    this.descargando.set(true);
+    try {
+      await this.comprobante.descargar({
+        codigo: compra.codigo,
+        fecha: new Date(),
+        invitado: this.auth.esInvitado(),
+        pelicula: funcion.pelicula.titulo,
+        funcion: new Date(funcion.inicio),
+        sala: `Sala ${funcion.sala.numero} · ${funcion.sala.formato} · ${funcion.idioma === 'subtitulada' ? 'Subtitulada' : 'Castellano'}`,
+        edadMinima: funcion.pelicula.edad_minima,
+        butacas: this.butacasCompradas().map(b => `${b.fila.trim()}${b.numero}${b.tipo === 'vip' ? ' (VIP)' : ''}`),
+        productos: this.candyComprado().map(i => `${i.cantidad}× ${i.nombre}`),
+        subtotal: compra.subtotal,
+        descuento: compra.descuento,
+        total: compra.total,
+        puntosUsados: compra.puntos_usados,
+        creditoUsado: compra.credito_usado,
+        estado: 'Pagada',
+      });
+      this.descargado.set(true);
+    } catch (error) {
+      console.error('No se pudo generar el comprobante', error);
+      this.mensajeError.set('No pudimos generar el PDF. Intentá de nuevo.');
+    } finally {
+      this.descargando.set(false);
     }
   }
 
@@ -460,26 +646,44 @@ export class Compra implements OnInit {
       return;
     }
 
+    // Invitado o cliente menor: tiene que aceptar que los menores ingresan con un adulto
+    if (this.requiereDeclaracion() && !this.declaraEdad()) {
+      this.aviso.set(`Confirmá que los menores de ${funcion.pelicula.edad_minima} años van a ingresar acompañados por un adulto.`);
+      return;
+    }
+
     this.mensajeError.set(null);
     this.pagando.set(true);
     this.loading.mostrar();
 
-    const items: ItemCompra[] = this.lineasCandy().map(l => ({ tipo: l.tipo, id: l.id, cantidad: l.cantidad }));
+    const items: ItemCompra[] = this.lineasCandy().map(l => ({
+      tipo: l.tipo,
+      id: l.id,
+      cantidad: l.cantidad,
+      puntos: l.tipo === 'producto' ? this.canjeadas(`producto-${l.id}`) : 0,
+    }));
 
     try {
       const butacas = this.mias();
       const candy = this.lineasCandy().map(l => ({ nombre: l.nombre, cantidad: l.cantidad }));
 
-      const compra = await this.compras.confirmar(funcion.id, items);
+      const compra = await this.compras.confirmar(funcion.id, items, this.canjeadas('entrada'), this.creditoAplicado());
       this.butacasCompradas.set(butacas);
       this.candyComprado.set(candy);
       this.compra.set(compra);
+      this.carrito.vaciar();
       this.vence.set(null);
       this.paso.set('listo');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error al confirmar la compra', error);
       this.mensajeError.set(mensajeErrorCompra(error, 'No pudimos procesar el pago. Intentá de nuevo.'));
+      if (esError(error, 'CREDITO_INSUFICIENTE')) {
+        this.cargarCredito();
+      }
+      if (esError(error, 'PUNTOS_INSUFICIENTES')) {
+        this.compras.misPuntos().then(r => this.saldoPuntos.set(r.disponibles)).catch(() => undefined);
+      }
       if (esError(error, 'RESERVA_VENCIDA')) {
         this.paso.set('butacas');
         await this.recargarEstado();

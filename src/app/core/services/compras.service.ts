@@ -8,7 +8,11 @@ import {
   FuncionDePelicula,
   ItemCompra,
   MiCompra,
+  ResultadoDevolucion,
+  ResumenCredito,
+  ResumenPuntos,
 } from '../models/compra.model';
+import { MiPelicula } from '../models/mi-pelicula.model';
 
 @Injectable({ providedIn: 'root' })
 export class ComprasService {
@@ -31,6 +35,15 @@ export class ComprasService {
       throw error;
     }
     return data as unknown as FuncionDePelicula[];
+  }
+
+  // Restricción de edad: false si el cliente logueado es menor que la edad mínima de la película
+  async puedoComprar(funcionId: number): Promise<boolean> {
+    const { data, error } = await this.supabase.client.rpc('puedo_comprar_funcion', { p_funcion: funcionId });
+    if (error) {
+      throw error;
+    }
+    return data !== false;
   }
 
   async funcion(id: number): Promise<FuncionDeCompra | null> {
@@ -85,9 +98,10 @@ export class ComprasService {
     }
   }
 
-  // Descuento de primera compra para el cliente logueado (null si no le corresponde)
+  // Descuento para el cliente logueado (null si no le corresponde ninguno):
+  // primera compra o, si no, por edad. La base lo vuelve a calcular al pagar.
   async descuentoPrimeraCompra(): Promise<DescuentoAplicable | null> {
-    const { data, error } = await this.supabase.client.rpc('descuento_primera_compra');
+    const { data, error } = await this.supabase.client.rpc('descuento_aplicable');
     if (error) {
       throw error;
     }
@@ -96,10 +110,14 @@ export class ComprasService {
   }
 
   // Pago simulado: la base valida la reserva, calcula el total y genera las entradas
-  async confirmar(funcionId: number, items: ItemCompra[]): Promise<CompraConfirmada> {
+  // entradasConPuntos: cuántas entradas se pagan con puntos (la base elige las más caras)
+  // credito: cuánto crédito a favor usar (la base lo recorta a lo que corresponda)
+  async confirmar(funcionId: number, items: ItemCompra[], entradasConPuntos = 0, credito = 0): Promise<CompraConfirmada> {
     const { data, error } = await this.supabase.client.rpc('confirmar_compra', {
       p_funcion: funcionId,
       p_items: items,
+      p_entradas_puntos: entradasConPuntos,
+      p_credito: credito,
     });
     if (error) {
       throw error;
@@ -107,17 +125,94 @@ export class ComprasService {
     return data as CompraConfirmada;
   }
 
+  // Compra solo de candy (sin función): la base calcula el total y genera el código
+  async confirmarCandy(items: ItemCompra[], credito = 0): Promise<CompraConfirmada> {
+    const { data, error } = await this.supabase.client.rpc('confirmar_compra_candy', {
+      p_items: items,
+      p_credito: credito,
+    });
+    if (error) {
+      throw error;
+    }
+    return data as CompraConfirmada;
+  }
+
+  // ---------- Puntos ----------
+
+  // Saldo disponible e historial (fecha, concepto, obtenidos, utilizados, saldo resultante)
+  async misPuntos(): Promise<ResumenPuntos> {
+    const { data, error } = await this.supabase.client.rpc('mis_puntos');
+    if (error) {
+      throw error;
+    }
+    return (data as ResumenPuntos | null) ?? { disponibles: 0, movimientos: [] };
+  }
+
+  // ---------- Mis películas ----------
+
+  // Historial de películas vistas (funciones ya empezadas) con mi calificación
+  async misPeliculas(): Promise<MiPelicula[]> {
+    const { data, error } = await this.supabase.client.rpc('mis_peliculas');
+    if (error) {
+      throw error;
+    }
+    return (data ?? []) as MiPelicula[];
+  }
+
+  // ---------- Ranking ----------
+
+  // Top de películas por entradas vendidas (activas). Lo calcula la base.
+  async masVendidas(limite = 3): Promise<{ pelicula_id: number; vendidas: number }[]> {
+    const { data, error } = await this.supabase.client.rpc('peliculas_mas_vendidas', { p_limite: limite });
+    if (error) {
+      throw error;
+    }
+    return ((data ?? []) as { pelicula_id: number; vendidas: number }[]).map(f => ({
+      pelicula_id: Number(f.pelicula_id),
+      vendidas: Number(f.vendidas),
+    }));
+  }
+
+  // ---------- Crédito a favor y devoluciones ----------
+
+  // Crédito disponible e historial (fecha, concepto, ingreso, egreso, saldo resultante)
+  async misCreditos(): Promise<ResumenCredito> {
+    const { data, error } = await this.supabase.client.rpc('mis_creditos');
+    if (error) {
+      throw error;
+    }
+    return (data as ResumenCredito | null) ?? { disponible: 0, movimientos: [] };
+  }
+
+  // Devuelve una entrada: la base controla el plazo y genera el crédito
+  async devolverEntrada(entradaId: number): Promise<ResultadoDevolucion> {
+    const { data, error } = await this.supabase.client.rpc('devolver_entrada', { p_entrada: entradaId });
+    if (error) {
+      throw error;
+    }
+    return data as ResultadoDevolucion;
+  }
+
+  // Devuelve una línea del candy (producto o combo sin entrada)
+  async devolverItem(itemId: number): Promise<ResultadoDevolucion> {
+    const { data, error } = await this.supabase.client.rpc('devolver_item', { p_item: itemId });
+    if (error) {
+      throw error;
+    }
+    return data as ResultadoDevolucion;
+  }
+
   // ---------- Mis compras ----------
 
-  // Compras del cliente con sus entradas (butaca, función, película) y productos del candy
+  // Mis compras: entradas (butaca, función, película) y productos del candy del cliente registrado
   async misCompras(clienteId: string): Promise<MiCompra[]> {
     const { data, error } = await this.supabase.client
       .from('compras')
       .select(
-        'id, codigo, total, estado, created_at, validada_sala_at, validada_candy_at, ' +
-        'entradas(id, precio, tipo_butaca, estado, butaca:butacas(fila, bloque, numero), ' +
+        'id, codigo, subtotal, monto_descuento, total, credito_usado, puntos_usados, puntos_ganados, estado, created_at, validada_sala_at, validada_candy_at, ' +
+        'entradas(id, precio, tipo_butaca, estado, canjeada_con_puntos, butaca:butacas(fila, bloque, numero), ' +
         'funcion:funciones(id, inicio, idioma, sala:salas(numero, formato), pelicula:peliculas(titulo, imagen_url, edad_minima))), ' +
-        'compra_items(cantidad, precio_unitario, producto:productos(nombre), combo:combos(nombre, incluye_entrada))',
+        'compra_items(id, cantidad, precio_unitario, canjeado_con_puntos, devuelto_at, producto:productos(nombre), combo:combos(nombre, incluye_entrada))',
       )
       .eq('cliente_id', clienteId)
       .order('created_at', { ascending: false });

@@ -163,8 +163,15 @@ export class Registro implements ConCambiosSinGuardar {
 
       this.mensajeExito.set('Tu cuenta ya está lista. En unos segundos te llevamos al inicio…');
 
+      // Mientras se muestra el aviso, el ícono de carga queda visible y bloquea la
+      // pantalla (menú incluido) hasta llegar al inicio. Este mostrar() es aparte del
+      // de la consulta: el finally de abajo cierra ese, y este se cierra al salir.
+      this.loading.mostrar();
       const temporizador = setTimeout(() => this.irAlInicio(), 3000);
-      this.destroyRef.onDestroy(() => clearTimeout(temporizador));
+      this.destroyRef.onDestroy(() => {
+        clearTimeout(temporizador);
+        this.loading.ocultar();
+      });
     } finally {
       this.loading.ocultar();
       this.enviando.set(false);

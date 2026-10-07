@@ -39,8 +39,12 @@ export const puestoGuard: CanActivateFn = async (route) => {
   return router.createUrlTree(['/admin/inicio']);
 };
 
-// Login del panel: solo sin sesión. Un empleado ya logueado va al panel;
-// un cliente logueado vuelve al sitio (tiene que cerrar su sesión primero).
+// Login del panel:
+//  · sin sesión → entra
+//  · empleado activo ya logueado → directo al panel
+//  · cliente logueado o invitado → entra igual: clientes y empleados están en tablas distintas,
+//    y al iniciar sesión como empleado se reemplaza la sesión del cliente
+//    (Supabase Auth tiene una sola sesión por navegador)
 export const loginEmpleadoGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const empleados = inject(EmpleadosService);
@@ -48,7 +52,8 @@ export const loginEmpleadoGuard: CanActivateFn = async () => {
 
   await auth.esperarInicio();
 
-  if (!auth.logueado()) {
+  // Sin sesión, invitado o cliente → muestra el login
+  if (!auth.conSesion() || auth.esInvitado() || auth.logueado()) {
     return true;
   }
 
@@ -61,5 +66,5 @@ export const loginEmpleadoGuard: CanActivateFn = async () => {
     // Si no se puede verificar, se lo trata como no empleado
   }
 
-  return router.createUrlTree(['/']);
+  return true;
 };

@@ -351,9 +351,17 @@
   padding: 0.45rem 0.8rem;
   border: 1px solid #3a3a42;
   border-radius: 10px;
+  background: none;
   color: var(--cinema-white);
+  font: inherit;
   text-decoration: none;
+  cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
+}
+
+.horario:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 .horario strong {
@@ -366,12 +374,134 @@
   font-size: 0.68rem;
 }
 
-a.horario:hover,
-a.horario:focus-visible {
+button.horario:not(:disabled):hover,
+button.horario:focus-visible {
   border-color: var(--one-red);
   background: rgb(215 25 32 / 0.15);
 }
 
+/* ---------- Ver horarios: semana, días y pasos ---------- */
+
+.semana {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-width: 320px;
+  padding: 0.35rem;
+  border: 1px solid #3a3a42;
+  border-radius: 999px;
+}
+
+.semana__rango {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.semana__flecha {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.06);
+  color: var(--cinema-white);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.semana__flecha:hover:not(:disabled),
+.semana__flecha:focus-visible {
+  background: var(--one-red);
+}
+
+.semana__flecha:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.funciones__ver {
+  align-self: flex-start;
+}
+
+.funciones__paso {
+  color: var(--cinema-muted);
+  font-size: 0.8rem;
+}
+
+.fechas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.fecha {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3.6rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #3a3a42;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--cinema-white);
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.fecha strong {
+  font-family: var(--font-title);
+  font-size: 1.15rem;
+  line-height: 1.1;
+}
+
+.fecha small {
+  color: var(--cinema-muted);
+  font-size: 0.68rem;
+}
+
+.fecha:hover,
+.fecha:focus-visible {
+  border-color: var(--one-red);
+}
+
+.fecha--activa {
+  border-color: var(--one-red);
+  background: var(--one-red);
+}
+
+.fecha--activa small {
+  color: var(--cinema-white);
+}
+
 .horario--bloqueado {
   opacity: 0.5;
+}
+
+/* ---------- Calificar ---------- */
+
+.resenas__mensaje {
+  margin: 0;
+  color: #86efac;
+  font-size: 0.85rem;
+}
+
+.resenas__mensaje--error {
+  color: #fca5a5;
+}
+
+.resenas__sesion {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: rgb(244 201 93 / 0.1);
+  color: var(--cinema-gold);
+  font-size: 0.85rem;
 }

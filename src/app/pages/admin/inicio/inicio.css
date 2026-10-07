@@ -34,3 +34,11 @@
   border-color: var(--one-red);
   transform: translateY(-2px);
 }
+.admin-inicio > .texto-secundario strong {
+  color: var(--cinema-white);
+}
+
+/* Escáner en el inicio (boletería / confitería): alineado con el saludo */
+.admin-inicio__validador {
+  margin-top: 1.25rem;
+}

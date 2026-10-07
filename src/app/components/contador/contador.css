@@ -1,0 +1,53 @@
+:host {
+  display: inline-flex;
+}
+
+.contador__agregar {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--one-red);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cinema-white);
+  font: 600 0.82rem var(--font-ui);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.contador__agregar:hover:not(:disabled),
+.contador__agregar:focus-visible {
+  background: var(--one-red);
+}
+
+.contador {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.06);
+}
+
+.contador button {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--one-red);
+  color: var(--cinema-white);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.contador span {
+  min-width: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

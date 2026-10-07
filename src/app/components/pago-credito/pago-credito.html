@@ -1,0 +1,20 @@
+<section class="credito" aria-labelledby="credito-titulo">
+  <label class="credito__opcion" [class.credito__opcion--off]="!disponible()">
+    <input type="checkbox" [checked]="usar() && disponible()" [disabled]="!disponible()"
+           (change)="usar.set($any($event.target).checked)" />
+    <span>
+      <strong id="credito-titulo">💳 Usar mi crédito a favor</strong>
+      <small>Disponible: {{ saldo() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</small>
+    </span>
+  </label>
+
+  @if (saldo() <= 0) {
+    <p class="credito__nota">No tenés crédito disponible. Se genera cuando devolvés entradas o productos.</p>
+  } @else if (aplicado() > 0) {
+    <p class="credito__nota">
+      Se usan <strong>{{ aplicado() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong>
+      · te quedan {{ restante() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }} a favor.
+      Lo pagado con crédito no suma puntos.
+    </p>
+  }
+</section>

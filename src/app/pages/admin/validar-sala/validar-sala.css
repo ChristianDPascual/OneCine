@@ -1,0 +1,18 @@
+.validar {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.validar__encabezado {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.validar__encabezado .etiqueta-cine {
+  color: var(--one-red);
+}
+
+.validar__encabezado .titulo-seccion,
+.validar__encabezado p {
+  margin: 0;
+}

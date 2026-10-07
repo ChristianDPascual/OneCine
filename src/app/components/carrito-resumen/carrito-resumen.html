@@ -1,0 +1,48 @@
+<!-- El pedido aparece recién cuando hay algo cargado -->
+@if (!carrito.vacio()) {
+  <aside class="pedido" aria-labelledby="pedido-titulo">
+    <!-- Qué lleva -->
+    <div class="pedido__detalle">
+      <h2 id="pedido-titulo" class="pedido__titulo">Tu pedido</h2>
+
+      <ul class="pedido__lineas">
+        @for (l of carrito.lineas(); track l.tipo + l.id) {
+          <li class="linea">
+            <div class="linea__datos">
+              <span class="linea__nombre">{{ l.nombre }}</span>
+              <span class="linea__precio">{{ l.precio * l.cantidad | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+            </div>
+            <app-contador [cantidad]="l.cantidad" [nombre]="l.nombre" [puedeSumar]="l.cantidad < maximo"
+                          (cambiar)="cambiar(l, $event)" />
+          </li>
+        }
+      </ul>
+
+      @if (carrito.combosConEntrada() > 0) {
+        <p class="pedido__nota">
+          🎟️ {{ carrito.combosConEntrada() === 1 ? 'Incluye 1 entrada' : 'Incluye ' + carrito.combosConEntrada() + ' entradas' }}:
+          en el siguiente paso elegís la película y el horario.
+        </p>
+      }
+    </div>
+
+    <!-- Total y acciones -->
+    <div class="pedido__cierre">
+      @if (carrito.descuento(); as d) {
+        <div class="pedido__descuento">
+          <span>🎁 {{ d.nombre }} ({{ d.porcentaje }}%)</span>
+          <span class="monto-descuento">−&nbsp;{{ carrito.montoDescuento() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span>
+        </div>
+      }
+      <div class="pedido__total">
+        <span>Total</span>
+        <strong>{{ carrito.totalConDescuento() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</strong>
+      </div>
+      <button type="button" class="boton boton--primario pedido__boton" (click)="continuar()">Continuar</button>
+      @if (carrito.combosConEntrada() === 0) {
+        <a routerLink="/comprar-candy" class="pedido__secundario">Pagar solo el candy</a>
+      }
+      <button type="button" class="pedido__vaciar" (click)="carrito.vaciar()">Vaciar pedido</button>
+    </div>
+  </aside>
+}

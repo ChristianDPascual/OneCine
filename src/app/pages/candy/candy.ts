@@ -5,9 +5,12 @@ import { CategoriasProductoService } from '../../core/services/categorias-produc
 import { CombosService } from '../../core/services/combos.service';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
 import { AuthService } from '../../core/services/auth.service';
+import { CarritoService } from '../../core/services/carrito.service';
 import { Producto } from '../../core/models/producto.model';
 import { ComboAdmin, precioPorSeparado } from '../../core/models/combo.model';
 import { Alerta } from '../../components/alerta/alerta';
+import { Contador } from '../../components/contador/contador';
+import { CarritoResumen } from '../../components/carrito-resumen/carrito-resumen';
 
 interface Seccion {
   id: string;       // ancla para el menú (#combos, #categoria-3…)
@@ -17,7 +20,7 @@ interface Seccion {
 
 @Component({
   selector: 'app-candy',
-  imports: [CurrencyPipe, DecimalPipe, Alerta],
+  imports: [CurrencyPipe, DecimalPipe, Alerta, Contador, CarritoResumen],
   templateUrl: './candy.html',
   styleUrl: './candy.css',
 })
@@ -28,6 +31,8 @@ export class Candy {
   private readonly configuracionService = inject(ConfiguracionService);
   // Los puntos canjeables solo se muestran con la sesión iniciada
   protected readonly auth = inject(AuthService);
+  // Carrito compartido: lo que se elige acá se paga solo o junto con las entradas
+  protected readonly carrito = inject(CarritoService);
 
   protected readonly cargando = signal(true);
   protected readonly mensajeError = signal<string | null>(null);
@@ -112,6 +117,22 @@ export class Candy {
     }
     const entrada = combo.incluye_entrada ? (this.precioEntrada() ?? 0) : 0;
     return precioPorSeparado(combo.items) + entrada - combo.precio;
+  }
+
+  // ---------- Carrito ----------
+
+  protected cambiarCombo(combo: ComboAdmin, diferencia: number): void {
+    this.carrito.cambiar(
+      { tipo: 'combo', id: combo.id, nombre: combo.nombre, precio: combo.precio, incluyeEntrada: combo.incluye_entrada },
+      diferencia,
+    );
+  }
+
+  protected cambiarProducto(producto: Producto, diferencia: number): void {
+    this.carrito.cambiar(
+      { tipo: 'producto', id: producto.id, nombre: producto.nombre, precio: producto.precio, incluyeEntrada: false },
+      diferencia,
+    );
   }
 
   // ---------- Navegación ----------

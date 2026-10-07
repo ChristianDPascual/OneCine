@@ -1,0 +1,13 @@
+@if (sinConexion()) {
+  <div class="estado-app estado-app--offline" role="status">
+    📡 Sin conexión. Podés ver lo que ya cargaste, pero para comprar o ver horarios necesitás internet.
+  </div>
+}
+
+@if (hayVersionNueva()) {
+  <div class="estado-app estado-app--version" role="status">
+    <span>🎬 Hay una versión nueva de OneCine.</span>
+    <button type="button" (click)="actualizar()">Actualizar</button>
+    <button type="button" class="estado-app__cerrar" aria-label="Más tarde" (click)="hayVersionNueva.set(false)">✕</button>
+  </div>
+}

@@ -6,9 +6,10 @@ import { LoadingService } from './core/services/loading.service';
 import { ConfirmacionService } from './core/services/confirmacion.service';
 import { Navbar } from './components/navbar/navbar';
 import { Confirmacion } from './components/confirmacion/confirmacion';
+import { EstadoApp } from './components/estado-app/estado-app';
 
 @Component({
-  imports: [RouterOutlet, Navbar, Confirmacion],
+  imports: [RouterOutlet, Navbar, Confirmacion, EstadoApp],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',

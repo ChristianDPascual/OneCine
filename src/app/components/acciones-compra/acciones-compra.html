@@ -1,0 +1,24 @@
+<div class="acciones">
+  <button type="button" class="acciones__principal" [disabled]="descargando()" (click)="descargar.emit()">
+    <span aria-hidden="true">⬇</span>
+    @if (descargando()) {
+      Generando…
+    } @else {
+      {{ descargado() ? 'Descargar de nuevo' : 'Descargar' }} {{ tieneEntradas() ? 'entradas' : 'comprobante' }}
+    }
+  </button>
+
+  <div class="acciones__fila" [class.acciones__fila--una]="!logueado()">
+    @if (logueado()) {
+      <a routerLink="/mis-compras" class="acciones__secundario">🎟️ Ver mis compras</a>
+    }
+    <button type="button" class="acciones__secundario" [class.acciones__secundario--bloqueado]="bloqueado()"
+            [attr.aria-disabled]="bloqueado()" (click)="volver.emit()">
+      🏠 Volver al inicio
+    </button>
+  </div>
+
+  @if (bloqueado()) {
+    <p class="acciones__nota">Descargá el comprobante para poder salir.</p>
+  }
+</div>

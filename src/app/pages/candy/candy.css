@@ -110,14 +110,15 @@
   letter-spacing: 0.04em;
 }
 
-.grilla {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.25rem;
-}
-
+/* Hasta 3 tarjetas por fila en escritorio, todas del mismo tamaño
+   (no cambian aunque aparezca el panel "Tu pedido") */
+.grilla,
 .grilla--combos {
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 260px));
+  justify-content: start;
+  gap: 1.25rem;
+  max-width: calc(3 * 260px + 2 * 1.25rem);
 }
 
 /* ---------- Tarjetas ---------- */
@@ -278,12 +279,20 @@
 }
 
 @keyframes brillo {
-  to { background-position: -200% 0; }
+  to {
+    background-position: -200% 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .esqueleto { animation: none; }
-  .combo, .producto { transition: none; }
+  .esqueleto {
+    animation: none;
+  }
+
+  .combo,
+  .producto {
+    transition: none;
+  }
 }
 
 .candy__vacio {
@@ -297,14 +306,18 @@
   text-align: center;
 }
 
-@media (max-width: 480px) {
-  .grilla {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.9rem;
-  }
-
+@media (max-width: 600px) {
+  .grilla,
   .grilla--combos {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .grilla,
+  .grilla--combos {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .combo__info,
@@ -315,4 +328,12 @@
   .precio {
     font-size: 1.1rem;
   }
+}
+
+/* ---------- Productos ---------- */
+
+.candy__contenido {
+  display: grid;
+  gap: 2rem;
+  min-width: 0;
 }

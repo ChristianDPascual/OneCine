@@ -1,0 +1,157 @@
+:host {
+  display: block;
+}
+
+/* Franja horizontal: detalle a la izquierda, total y botones a la derecha */
+.pedido {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  align-items: start;
+  gap: 1.25rem 2rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgb(214 40 40 / 0.45);
+  border-radius: 18px;
+  background: var(--cinema-surface);
+}
+
+.pedido__detalle {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.pedido__titulo {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 1.15rem;
+}
+
+/* ---------- Líneas: dos fichas por fila, todas del mismo ancho ---------- */
+
+.pedido__lineas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linea {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.9rem;
+  border: 1px solid #2c2c30;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.03);
+}
+
+/* Cantidad impar: la última ficha ocupa toda la fila (sin hueco al lado) */
+.linea:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.linea__datos {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.linea__nombre {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.linea__precio {
+  color: var(--cinema-muted);
+  font-size: 0.78rem;
+}
+
+.pedido__nota {
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  background: rgb(214 40 40 / 0.12);
+  font-size: 0.82rem;
+}
+
+/* ---------- Total y acciones ---------- */
+
+.pedido__cierre {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.pedido__descuento {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: #4ade80;
+  font-size: 0.85rem;
+}
+
+.monto-descuento {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.pedido__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.pedido__total strong {
+  color: var(--cinema-gold);
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+}
+
+.pedido__boton {
+  width: 100%;
+}
+
+.pedido__secundario {
+  display: block;
+  padding: 0.6rem 1rem;
+  border: 1px solid #3a3a42;
+  border-radius: 999px;
+  color: var(--cinema-white);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.pedido__secundario:hover {
+  border-color: var(--one-red);
+}
+
+.pedido__vaciar {
+  border: 0;
+  background: none;
+  color: var(--cinema-muted);
+  font: 600 0.8rem var(--font-ui);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pedido__vaciar:hover {
+  color: var(--cinema-white);
+}
+
+/* ---------- Celular: todo apilado y compacto ---------- */
+
+@media (max-width: 760px) {
+  .pedido {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .pedido__lineas {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,41 @@
+<section class="puntos" aria-labelledby="puntos-titulo">
+  <header class="puntos__encabezado">
+    <h3 id="puntos-titulo">⭐ Pagar con puntos</h3>
+    <span class="puntos__saldo">
+      Tenés <strong>{{ saldo() | number }}</strong> pts
+      @if (usados() > 0) {
+        · usás <strong>{{ usados() | number }}</strong> · te quedan {{ restantes() | number }}
+      }
+    </span>
+  </header>
+
+  @if (opciones().length === 0) {
+    <p class="puntos__nota">Nada de esta compra se puede pagar con puntos.</p>
+  } @else {
+    @if (sinSaldo()) {
+      <p class="puntos__nota puntos__nota--alerta" role="status">
+        No tenés puntos suficientes para canjear ningún ítem de esta compra.
+      </p>
+    }
+
+    <ul class="puntos__lista">
+      @for (o of opciones(); track o.clave) {
+        <li class="puntos__item" [class.puntos__item--sin-saldo]="!alcanza(o)">
+          <div>
+            <strong>{{ o.nombre }}</strong>
+            <small>
+              {{ o.puntos | number }} pts c/u
+              @if (!alcanza(o)) { · <span class="puntos__insuficiente">Saldo insuficiente</span> }
+            </small>
+          </div>
+          <app-contador [cantidad]="cantidad(o)" [nombre]="o.nombre" [puedeSumar]="puedeSumar(o)"
+                        (cambiar)="cambiar(o, $event)" />
+        </li>
+      }
+    </ul>
+
+    <p class="puntos__nota">
+      Se canjean ítems completos. Lo que no pagues con puntos se paga con dinero, y los puntos que no uses te quedan a favor.
+    </p>
+  }
+</section>

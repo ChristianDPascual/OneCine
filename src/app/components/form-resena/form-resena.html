@@ -1,0 +1,41 @@
+<form class="form-resena" [formGroup]="formulario" (ngSubmit)="enviar()">
+  <p class="form-resena__titulo">{{ editando() ? 'Tu calificación' : '¿Ya la viste? Calificala' }}</p>
+
+  <!-- Estrellas: grupo de radio accesible (flechas del teclado para cambiar) -->
+  <div class="form-resena__estrellas" role="radiogroup" aria-label="Calificación de 1 a 5 estrellas"
+       tabindex="0" (keydown)="teclado($event)" (mouseleave)="hover.set(0)">
+    @for (n of posiciones; track n) {
+      <button type="button" role="radio" class="form-resena__estrella" tabindex="-1"
+              [class.form-resena__estrella--llena]="n <= visibles()"
+              [attr.aria-checked]="formulario.controls.estrellas.value === n"
+              [attr.aria-label]="n + (n === 1 ? ' estrella' : ' estrellas')"
+              (mouseenter)="hover.set(n)" (click)="elegir(n)">★</button>
+    }
+    <span class="form-resena__etiqueta" aria-live="polite">{{ etiquetas[visibles()] }}</span>
+  </div>
+  @if (formulario.controls.estrellas.touched && formulario.controls.estrellas.invalid) {
+    <p class="campo__error">Elegí de 1 a 5 estrellas.</p>
+  }
+
+  <label class="form-resena__comentario">
+    <span class="sr-only">Comentario (opcional)</span>
+    <textarea formControlName="comentario" rows="2" [attr.maxlength]="maximo"
+              placeholder="Contá en pocas palabras qué te pareció (opcional)"></textarea>
+    <small [class.form-resena__contador--limite]="restantes() <= 10">{{ restantes() }} / {{ maximo }}</small>
+  </label>
+
+  <div class="form-resena__acciones">
+    @if (confirmandoBorrado()) {
+      <span class="form-resena__pregunta">¿Borrar tu reseña?</span>
+      <button type="button" class="form-resena__guardar" [disabled]="guardando()" (click)="eliminar.emit()">Sí, borrar</button>
+      <button type="button" class="form-resena__borrar" (click)="confirmandoBorrado.set(false)">Cancelar</button>
+    } @else {
+      <button type="submit" class="form-resena__guardar" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : editando() ? 'Actualizar reseña' : 'Publicar reseña' }}
+      </button>
+      @if (editando()) {
+        <button type="button" class="form-resena__borrar" [disabled]="guardando()" (click)="confirmandoBorrado.set(true)">Borrar</button>
+      }
+    }
+  </div>
+</form>

@@ -10,3 +10,149 @@
 .pagina-cuenta > .etiqueta-cine {
   color: var(--one-red);
 }
+/* ---------- Saldo ---------- */
+
+.puntos-saldo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin-top: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #3a3a42;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgb(215 25 32 / 0.18), #121216 60%);
+}
+
+.puntos-saldo__etiqueta {
+  display: block;
+  color: var(--cinema-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.puntos-saldo__valor {
+  font-family: var(--font-title);
+  font-size: clamp(2.2rem, 6vw, 3rem);
+  color: var(--cinema-gold);
+}
+
+.puntos-saldo__reglas {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--cinema-muted);
+  font-size: 0.85rem;
+}
+
+.puntos-saldo__reglas strong {
+  color: var(--cinema-white);
+}
+
+.puntos-saldo__reglas a {
+  color: var(--cinema-white);
+}
+
+/* ---------- Historial ---------- */
+
+.puntos-historial__titulo {
+  margin: 1.5rem 0 0.25rem;
+  font-size: 1.1rem;
+}
+
+.puntos-tabla__contenedor {
+  overflow-x: auto;
+  border: 1px solid #2c2c30;
+  border-radius: 14px;
+}
+
+.puntos-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.puntos-tabla th,
+.puntos-tabla td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #2c2c30;
+}
+
+.puntos-tabla th {
+  background: #121216;
+  color: var(--cinema-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.puntos-tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.puntos-tabla .numero {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.puntos-tabla__mas {
+  color: #86efac;
+}
+
+.puntos-tabla__menos {
+  color: #fca5a5;
+}
+
+.puntos-vacio {
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 1px dashed #3a3a42;
+  border-radius: 14px;
+  color: var(--cinema-muted);
+}
+
+.puntos-vacio p {
+  margin: 0;
+}
+
+/* Celular: cada movimiento como tarjeta */
+@media (max-width: 640px) {
+  .puntos-tabla thead {
+    display: none;
+  }
+
+  .puntos-tabla tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #2c2c30;
+  }
+
+  .puntos-tabla td {
+    border-bottom: none;
+    padding: 0.3rem 1rem;
+  }
+
+  .puntos-tabla td::before {
+    content: attr(data-titulo);
+    display: block;
+    color: var(--cinema-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+  }
+
+  .puntos-tabla td[data-titulo='Concepto'] {
+    grid-column: 1 / -1;
+  }
+
+  .puntos-tabla .numero {
+    text-align: left;
+  }
+}
