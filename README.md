@@ -358,7 +358,7 @@ Esto permite evitar problemas como vender una misma butaca dos veces o utilizar 
 
 El estado de las pantallas se maneja principalmente con **Signals**.
 
-RxJS se utiliza cuando aporta una ventaja concreta, por ejemplo en formularios, búsquedas con `debounceTime` y `switchMap`, router y service worker.
+RxJS se utiliza cuando aporta una ventaja concreta, por ejemplo en formularios, búsquedas con `debounceTime` y `switchMap`.
 
 ## Componentes reutilizables
 
